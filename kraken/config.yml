@@ -1,0 +1,9 @@
+node_code: 81243333-4574-428e-9002-9a165666ae34
+Seqence: 0
+front:
+    tcp_endpoint: ":8081"
+    ws_endpoint: ":8080"
+    max_conn: 1000
+    timeout: 300
+backend:
+    tcp_endpoint: ":6688"

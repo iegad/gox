@@ -70,31 +70,7 @@ type IOService struct {
 	wg           sync.WaitGroup
 }
 
-func DefaultIOService(engine IEngine) (*IOService, error) {
-	if engine == nil {
-		log.Fatal("engine is nil")
-	}
-
-	tcpAddr, err := net.ResolveTCPAddr("tcp", "0.0.0.0:8080")
-	if err != nil {
-		return nil, err
-	}
-
-	return &IOService{
-		running:      false,
-		tcpAddr:      tcpAddr,
-		wsAddr:       nil,
-		tcpListener:  nil,
-		wsListener:   nil,
-		maxConn:      DEFAULT_MAX_CONN,
-		tcpConnCount: 0,
-		wsConnCount:  0,
-		timeout:      time.Duration(DEFAULT_TIMEOUT) * time.Second,
-		engine:       engine,
-	}, nil
-}
-
-func NewIOService(cfg *IOServiceConfig) (*IOService, error) {
+func NewIOService(cfg *IOServiceConfig, engine IEngine) (*IOService, error) {
 	if cfg == nil {
 		return nil, ErrConfigIsNil
 	}
@@ -124,8 +100,8 @@ func NewIOService(cfg *IOServiceConfig) (*IOService, error) {
 	}
 
 	maxConn := cfg.MaxConn
-	if maxConn <= 0 {
-		maxConn = DEFAULT_MAX_CONN
+	if maxConn < 0 {
+		maxConn = 0
 	}
 
 	timeout := cfg.Timeout
@@ -143,7 +119,7 @@ func NewIOService(cfg *IOServiceConfig) (*IOService, error) {
 		tcpConnCount: 0,
 		wsConnCount:  0,
 		timeout:      time.Duration(timeout * int32(time.Second)),
-		engine:       nil,
+		engine:       engine,
 	}, nil
 }
 
@@ -237,7 +213,7 @@ func (this_ *IOService) tcpRun() {
 			break
 		}
 
-		if atomic.LoadInt32(&this_.tcpConnCount)+atomic.LoadInt32(&this_.wsConnCount) >= this_.maxConn {
+		if this_.maxConn > 0 && atomic.LoadInt32(&this_.tcpConnCount)+atomic.LoadInt32(&this_.wsConnCount) >= this_.maxConn {
 			conn.Close()
 			continue
 		}
@@ -304,7 +280,7 @@ func (this_ *IOService) wsRun() {
 }
 
 func (this_ *IOService) wsHandler(w http.ResponseWriter, r *http.Request) {
-	if atomic.LoadInt32(&this_.tcpConnCount)+atomic.LoadInt32(&this_.wsConnCount) >= this_.maxConn {
+	if this_.maxConn > 0 && atomic.LoadInt32(&this_.tcpConnCount)+atomic.LoadInt32(&this_.wsConnCount) >= this_.maxConn {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
