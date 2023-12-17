@@ -62,14 +62,6 @@ func (this_ *Sess) Write(data []byte) (int, error) {
 	return this_.wsWrite(data)
 }
 
-func (this_ *Sess) Read() ([]byte, error) {
-	if this_.tcpConn != nil {
-		return this_.tcpRead()
-	}
-
-	return this_.wsRead()
-}
-
 func (this_ *Sess) RemoteAddr() net.Addr {
 	if this_.tcpConn != nil {
 		return this_.tcpConn.RemoteAddr()
@@ -132,15 +124,6 @@ func (this_ *Sess) tcpRead() ([]byte, error) {
 			return ret, nil
 		}
 	}
-}
-
-func (this_ *Sess) wsRead() ([]byte, error) {
-	if this_.wsConn == nil {
-		log.Fatal("Sess.wsConn is nil")
-	}
-
-	_, data, err := this_.wsConn.ReadMessage()
-	return data, err
 }
 
 func (this_ *Sess) tcpWrite(data []byte) (int, error) {
