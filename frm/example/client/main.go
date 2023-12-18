@@ -11,7 +11,7 @@ import (
 const nTimes = 100000
 
 func main() {
-	c, err := nw.NewTcpClient("", "127.0.0.1:8080", 0)
+	c, err := nw.NewTcpClient("", "127.0.0.1:6688", 0)
 	if err != nil {
 		log.Fatal(err)
 	}

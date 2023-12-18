@@ -35,15 +35,19 @@ func (this_ *backend) OnData(sess *nw.Sess, data []byte) error {
 }
 
 func (this_ *backend) OnRun(iosvc *nw.IOService) error {
-	log.Info("-------------- server run ----------------")
+	tcpAddr := iosvc.TcpAddr()
+	if tcpAddr != nil {
+		log.Info("backend's service tcp[%v] is running ...", tcpAddr.String())
+	}
 
-	log.Info(iosvc.Info())
 	return nil
 }
 
 func (this_ *backend) OnStopped(iosvc *nw.IOService) {
-	log.Info("-------------- server stopped ----------------")
-	log.Info(iosvc.Info())
+	tcpAddr := iosvc.TcpAddr()
+	if tcpAddr != nil {
+		log.Info("backend's service tcp[%v] has stopped !!!", tcpAddr.String())
+	}
 }
 
 func (this_ *backend) OnShutdown(iosvc *nw.IOService) {
@@ -53,6 +57,12 @@ func (this_ *backend) OnShutdown(iosvc *nw.IOService) {
 	})
 }
 
-func init() {
-	//Backend = &backend{}
+func InitBackend(cfg *nw.IOServiceConfig) error {
+	if cfg == nil {
+		log.Fatal("cfg is nil")
+	}
+
+	var err error
+	Backend, err = nw.NewIOService(cfg, &backend{})
+	return err
 }

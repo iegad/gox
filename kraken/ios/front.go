@@ -35,15 +35,29 @@ func (this_ *front) OnData(sess *nw.Sess, data []byte) error {
 }
 
 func (this_ *front) OnRun(iosvc *nw.IOService) error {
-	log.Info("-------------- server run ----------------")
+	tcpAddr := iosvc.TcpAddr()
+	if tcpAddr != nil {
+		log.Info("front's service tcp[%v] is running ...", tcpAddr.String())
+	}
 
-	log.Info(iosvc.Info())
+	wsAddr := iosvc.WsAddr()
+	if wsAddr != nil {
+		log.Info("front's service ws[%v] is running ...", wsAddr.String())
+	}
+
 	return nil
 }
 
 func (this_ *front) OnStopped(iosvc *nw.IOService) {
-	log.Info("-------------- server stopped ----------------")
-	log.Info(iosvc.Info())
+	tcpAddr := iosvc.TcpAddr()
+	if tcpAddr != nil {
+		log.Info("front's service tcp[%v] has stopped !!!", tcpAddr.String())
+	}
+
+	wsAddr := iosvc.WsAddr()
+	if wsAddr != nil {
+		log.Info("front's service ws[%v] has stopped !!!", wsAddr.String())
+	}
 }
 
 func (this_ *front) OnShutdown(iosvc *nw.IOService) {
@@ -59,11 +73,6 @@ func InitFront(cfg *nw.IOServiceConfig) error {
 	}
 
 	var err error
-
 	Front, err = nw.NewIOService(cfg, &front{})
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return err
 }

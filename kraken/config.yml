@@ -1,9 +1,10 @@
-node_code: 81243333-4574-428e-9002-9a165666ae34
+node_code: ae906ff9-552b-4f63-b807-95a1195deddf
 Seqence: 0
+manager_host: ":9090"
 front:
     tcp_endpoint: ":8081"
     ws_endpoint: ":8080"
     max_conn: 1000
-    timeout: 300
+    timeout(s): 300
 backend:
     tcp_endpoint: ":6688"

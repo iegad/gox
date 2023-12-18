@@ -13,10 +13,11 @@ import (
 var Instance *krakenConfig
 
 type krakenConfig struct {
-	NodeCode string              `yaml:"node_code"`
-	Seqence  uint32              `yaml:"Seqence"`
-	Front    *nw.IOServiceConfig `yaml:"front,omitempty"`
-	Backend  *nw.IOServiceConfig `yaml:"backend,omitempty"`
+	NodeCode     string              `yaml:"node_code"`
+	Seqence      uint32              `yaml:"Seqence"`
+	ManangerHost string              `yaml:"manager_host"`
+	Front        *nw.IOServiceConfig `yaml:"front,omitempty"`
+	Backend      *nw.IOServiceConfig `yaml:"backend,omitempty"`
 }
 
 func LoadConfig(filename string) error {
@@ -33,10 +34,11 @@ func LoadConfig(filename string) error {
 			}
 
 			def := &krakenConfig{
-				NodeCode: uuid.NewString(),
-				Seqence:  0,
-				Front:    svcConfig,
-				Backend:  svcConfig,
+				NodeCode:     uuid.NewString(),
+				ManangerHost: "",
+				Seqence:      0,
+				Front:        svcConfig,
+				Backend:      svcConfig,
 			}
 
 			wbuf, err := yaml.Marshal(def)
@@ -87,6 +89,10 @@ func LoadConfig(filename string) error {
 
 	if len(tmp.NodeCode) != 36 {
 		return basic.Err_CFG_NodeCodeInvalid
+	}
+
+	if len(tmp.ManangerHost) == 0 {
+		return basic.Err_CFG_ManagerHost
 	}
 
 	Instance = tmp

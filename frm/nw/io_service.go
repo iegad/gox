@@ -52,7 +52,7 @@ type IOServiceConfig struct {
 	TcpEndpoint *string `yaml:"tcp_endpoint,omitempty"`
 	WsEndpoint  *string `yaml:"ws_endpoint,omitempty"`
 	MaxConn     int32   `yaml:"max_conn,omitempty"`
-	Timeout     int32   `yaml:"timeout,omitempty"`
+	Timeout     int32   `yaml:"timeout(s),omitempty"`
 }
 
 type IOService struct {
@@ -150,6 +150,22 @@ func (this_ *IOService) Info() *IOServiceInfo {
 	}
 }
 
+func (this_ *IOService) TcpAddr() net.Addr {
+	if this_.tcpAddr != nil {
+		return this_.tcpAddr
+	}
+
+	return nil
+}
+
+func (this_ *IOService) WsAddr() net.Addr {
+	if this_.wsAddr != nil {
+		return this_.wsAddr
+	}
+
+	return nil
+}
+
 func (this_ *IOService) Shutdown() {
 	this_.stMtx.Lock()
 	defer this_.stMtx.Unlock()
@@ -181,30 +197,39 @@ func (this_ *IOService) Run() error {
 		if err != nil {
 			return err
 		}
-
-		go this_.tcpRun()
 	}
 
 	if this_.wsAddr != nil {
-		this_.wsListener, err = net.ListenTCP("tcp", this_.tcpAddr.(*net.TCPAddr))
+		this_.wsListener, err = net.ListenTCP("tcp", this_.wsAddr.(*net.TCPAddr))
 		if err != nil {
 			return err
 		}
-
-		go this_.wsRun()
 	}
 
 	this_.running = true
-	this_.engine.OnRun(this_)
+	err = this_.engine.OnRun(this_)
+	if err != nil {
+		return err
+	}
+
+	if this_.tcpListener != nil {
+		this_.wg.Add(1)
+		go this_.tcpRun(&this_.wg)
+	}
+
+	if this_.wsListener != nil {
+		this_.wg.Add(1)
+		go this_.wsRun(&this_.wg)
+	}
+
 	this_.wg.Wait()
 	this_.running = false
 	this_.engine.OnStopped(this_)
 	return nil
 }
 
-func (this_ *IOService) tcpRun() {
-	this_.wg.Add(1)
-	defer this_.wg.Done()
+func (this_ *IOService) tcpRun(wg *sync.WaitGroup) {
+	defer wg.Done()
 
 	for {
 		conn, err := this_.tcpListener.AcceptTCP()
@@ -219,13 +244,12 @@ func (this_ *IOService) tcpRun() {
 		}
 
 		atomic.AddInt32(&this_.tcpConnCount, 1)
-		go this_.tcpConnHandle(conn)
+		wg.Add(1)
+		go this_.tcpConnHandle(conn, wg)
 	}
 }
 
-func (this_ *IOService) tcpConnHandle(conn *net.TCPConn) {
-	this_.wg.Add(1)
-
+func (this_ *IOService) tcpConnHandle(conn *net.TCPConn, wg *sync.WaitGroup) {
 	var (
 		err  error
 		sess = NewTcpSession(conn, this_.timeout)
@@ -236,7 +260,7 @@ func (this_ *IOService) tcpConnHandle(conn *net.TCPConn) {
 		this_.engine.OnDisconnected(sess)
 		conn.Close()
 		atomic.AddInt32(&this_.tcpConnCount, -1)
-		this_.wg.Done()
+		wg.Done()
 	}()
 
 	err = this_.engine.OnConnected(sess)
@@ -268,9 +292,8 @@ func (this_ *IOService) tcpConnHandle(conn *net.TCPConn) {
 	}
 }
 
-func (this_ *IOService) wsRun() {
-	this_.wg.Add(1)
-	defer this_.wg.Done()
+func (this_ *IOService) wsRun(wg *sync.WaitGroup) {
+	defer wg.Done()
 
 	http.HandleFunc("/ws", this_.wsHandler)
 	err := http.Serve(this_.wsListener, nil)
@@ -292,12 +315,11 @@ func (this_ *IOService) wsHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	atomic.AddInt32(&this_.wsConnCount, 1)
-	go this_.wsConnHandle(conn)
+	this_.wg.Add(1)
+	go this_.wsConnHandle(conn, &this_.wg)
 }
 
-func (this_ *IOService) wsConnHandle(conn *websocket.Conn) {
-	this_.wg.Add(1)
-
+func (this_ *IOService) wsConnHandle(conn *websocket.Conn, wg *sync.WaitGroup) {
 	var (
 		err  error
 		sess = NewWsSession(conn, this_.timeout)
@@ -308,7 +330,7 @@ func (this_ *IOService) wsConnHandle(conn *websocket.Conn) {
 		this_.engine.OnDisconnected(sess)
 		conn.Close()
 		atomic.AddInt32(&this_.wsConnCount, -1)
-		this_.wg.Done()
+		wg.Done()
 	}()
 
 	err = this_.engine.OnConnected(sess)

@@ -3,8 +3,9 @@ module github.com/iegad/gox/kraken
 go 1.21.5
 
 require (
+	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.5.0
-	github.com/iegad/gox/frm v0.0.0-20231217100303-f4a5028c66cd
+	github.com/iegad/gox/frm v0.0.1
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -15,7 +16,6 @@ require (
 	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
 	github.com/gin-contrib/cors v1.5.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
-	github.com/gin-gonic/gin v1.9.1 // indirect
 	github.com/go-playground/locales v0.14.1 // indirect
 	github.com/go-playground/universal-translator v0.18.1 // indirect
 	github.com/go-playground/validator/v10 v10.15.5 // indirect
@@ -38,4 +38,4 @@ require (
 	google.golang.org/protobuf v1.31.0 // indirect
 )
 
-replace github.com/iega/gox/frm => D:/iegad/gox/frm
+replace github.com/iegad/gox/frm v0.0.1 => ../frm

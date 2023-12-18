@@ -6,13 +6,13 @@ import (
 	"syscall"
 
 	"github.com/iegad/gox/frm/log"
-	"github.com/iegad/gox/frm/web"
 	"github.com/iegad/gox/kraken/conf"
 	"github.com/iegad/gox/kraken/ios"
+	"github.com/iegad/gox/kraken/manager"
 )
 
 func main() {
-	err := conf.LoadConfig("./config.yml")
+	err := conf.LoadConfig("config.yml")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -22,15 +22,15 @@ func main() {
 		log.Fatal(err)
 	}
 
-	server, err := web.NewServer(":8888", true)
+	err = ios.InitBackend(conf.Instance.Backend)
 	if err != nil {
-		log.Error(err)
-		return
+		log.Fatal(err)
 	}
 
-	// server.Router().POST("/io_service/run", func(ctx *gin.Context) { go iosvc.Run() })
-	// server.Router().POST("/io_service/shutdown", func(ctx *gin.Context) { iosvc.Shutdown() })
-	// server.Router().GET("/io_service/info", func(ctx *gin.Context) { ctx.JSON(http.StatusOK, iosvc.Info()) })
+	err = manager.Init(conf.Instance.ManangerHost)
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	var (
 		sigs = make(chan os.Signal, 1)
@@ -41,12 +41,11 @@ func main() {
 
 	go func() {
 		<-sigs
-		server.Shutdown()
-		// iosvc.Shutdown()
-		log.Info("服务已关闭")
+		manager.Instance.Shutdown()
 		done <- true
 	}()
 
-	log.Error(server.Run())
+	manager.Instance.Run()
 	<-done
+	log.Info("Kraken is exit !!!")
 }

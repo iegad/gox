@@ -10,4 +10,5 @@ var (
 	Err_CFG_FrontTimeout    = errors.New("config: front.timeout is invalid")
 	Err_CFG_BackendInvalid  = errors.New("config: backend is invalid")
 	Err_CFG_BackendEndpoint = errors.New("config: front.tcp_endpoint is invalid")
+	Err_CFG_ManagerHost     = errors.New("config: manager_host is invalid")
 )
