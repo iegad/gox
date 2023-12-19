@@ -29,7 +29,6 @@ type IEngine interface {
 
 	OnRun(iosvc *IOService) error
 	OnStopped(iosvc *IOService)
-	OnShutdown(iosvc *IOService)
 }
 
 type IOServiceInfo struct {
@@ -56,7 +55,6 @@ type IOServiceConfig struct {
 }
 
 type IOService struct {
-	running      bool
 	tcpAddr      net.Addr
 	wsAddr       net.Addr
 	tcpListener  *net.TCPListener
@@ -104,13 +102,11 @@ func NewIOService(cfg *IOServiceConfig, engine IEngine) (*IOService, error) {
 		maxConn = 0
 	}
 
-	timeout := cfg.Timeout
-	if timeout <= 0 || timeout >= MAX_TIMEOUT {
-		timeout = DEFAULT_TIMEOUT
+	if cfg.Timeout < 0 {
+		log.Fatal("timeout is less than 0")
 	}
 
 	return &IOService{
-		running:      false,
 		tcpAddr:      tcpAddr,
 		wsAddr:       wsAddr,
 		tcpListener:  nil,
@@ -118,7 +114,7 @@ func NewIOService(cfg *IOServiceConfig, engine IEngine) (*IOService, error) {
 		maxConn:      maxConn,
 		tcpConnCount: 0,
 		wsConnCount:  0,
-		timeout:      time.Duration(timeout * int32(time.Second)),
+		timeout:      time.Duration(cfg.Timeout) * time.Second,
 		engine:       engine,
 	}, nil
 }
@@ -144,7 +140,7 @@ func (this_ *IOService) Info() *IOServiceInfo {
 		TcpConnCount: this_.tcpConnCount,
 		WsConnCount:  this_.wsConnCount,
 		MaxConn:      this_.maxConn,
-		Running:      this_.running,
+		Running:      this_.tcpListener != nil || this_.wsListener != nil,
 		Timeout:      int32(this_.timeout / time.Second),
 		Engine:       this_.engine.Info(),
 	}
@@ -170,6 +166,10 @@ func (this_ *IOService) Shutdown() {
 	this_.stMtx.Lock()
 	defer this_.stMtx.Unlock()
 
+	if this_.tcpListener != nil || this_.wsListener != nil {
+		this_.engine.OnStopped(this_)
+	}
+
 	if this_.tcpListener != nil {
 		this_.tcpListener.Close()
 		this_.tcpListener = nil
@@ -180,36 +180,33 @@ func (this_ *IOService) Shutdown() {
 		this_.wsListener = nil
 	}
 
-	this_.engine.OnShutdown(this_)
+	this_.wg.Wait()
 }
 
-func (this_ *IOService) Run() error {
+func (this_ *IOService) Wait() {
+	this_.wg.Wait()
+}
+
+func (this_ *IOService) Run() (err error) {
 	this_.Shutdown()
 
-	var err error
-
 	if this_.tcpAddr == nil && this_.wsAddr == nil {
-		return ErrNoPoints
+		err = ErrNoPoints
+		return
 	}
 
 	if this_.tcpAddr != nil {
 		this_.tcpListener, err = net.ListenTCP("tcp", this_.tcpAddr.(*net.TCPAddr))
 		if err != nil {
-			return err
+			return
 		}
 	}
 
 	if this_.wsAddr != nil {
 		this_.wsListener, err = net.ListenTCP("tcp", this_.wsAddr.(*net.TCPAddr))
 		if err != nil {
-			return err
+			return
 		}
-	}
-
-	this_.running = true
-	err = this_.engine.OnRun(this_)
-	if err != nil {
-		return err
 	}
 
 	if this_.tcpListener != nil {
@@ -222,10 +219,12 @@ func (this_ *IOService) Run() error {
 		go this_.wsRun(&this_.wg)
 	}
 
-	this_.wg.Wait()
-	this_.running = false
-	this_.engine.OnStopped(this_)
-	return nil
+	err = this_.engine.OnRun(this_)
+	if err != nil {
+		this_.Shutdown()
+	}
+
+	return
 }
 
 func (this_ *IOService) tcpRun(wg *sync.WaitGroup) {
@@ -235,7 +234,9 @@ func (this_ *IOService) tcpRun(wg *sync.WaitGroup) {
 		conn, err := this_.tcpListener.AcceptTCP()
 		if err != nil {
 			log.Error(err)
-			break
+			if netIsClosedErr(err) {
+				break
+			}
 		}
 
 		if this_.maxConn > 0 && atomic.LoadInt32(&this_.tcpConnCount)+atomic.LoadInt32(&this_.wsConnCount) >= this_.maxConn {
@@ -281,7 +282,9 @@ func (this_ *IOService) tcpConnHandle(conn *net.TCPConn, wg *sync.WaitGroup) {
 		rbuf, err = sess.tcpRead()
 		if err != nil {
 			log.Error(err)
-			break
+			if netIsClosedErr(err) {
+				break
+			}
 		}
 
 		err = this_.engine.OnData(sess, rbuf)
@@ -351,7 +354,9 @@ func (this_ *IOService) wsConnHandle(conn *websocket.Conn, wg *sync.WaitGroup) {
 		_, rbuf, err = conn.ReadMessage()
 		if err != nil {
 			log.Error(err)
-			break
+			if netIsClosedErr(err) {
+				break
+			}
 		}
 
 		err = this_.engine.OnData(sess, rbuf)

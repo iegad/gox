@@ -1,12 +1,12 @@
 package manager
 
 import (
-	"sync"
-
 	"github.com/iegad/gox/frm/log"
 	"github.com/iegad/gox/frm/web"
 	"github.com/iegad/gox/kraken/ios"
 	"github.com/iegad/gox/kraken/manager/cgi"
+	"github.com/iegad/gox/kraken/manager/cgi/backend"
+	"github.com/iegad/gox/kraken/manager/cgi/front"
 )
 
 var Instance *manager
@@ -30,36 +30,24 @@ func (this_ *manager) Shutdown() {
 }
 
 func (this_ *manager) Run() {
-	wg := sync.WaitGroup{}
-
-	wg.Add(1)
 	go func() {
-		defer wg.Done()
 		err := ios.Front.Run()
 		if err != nil {
 			log.Error("front service: %v", err)
 		}
 	}()
 
-	wg.Add(1)
 	go func() {
-		defer wg.Done()
 		err := ios.Backend.Run()
 		if err != nil {
 			log.Error("backend service: %v", err)
 		}
 	}()
 
-	wg.Add(1)
-	go func() {
-		defer wg.Done()
-		err := this_.webServer.Run()
-		if err != nil {
-			log.Error("manager web: %v", err)
-		}
-	}()
-
-	wg.Wait()
+	err := this_.webServer.Run()
+	if err != nil {
+		log.Error("manager web: %v", err)
+	}
 }
 
 func Init(host string) error {
@@ -76,6 +64,12 @@ func Init(host string) error {
 	}
 
 	tmp.webServer.Router().POST("/login", cgi.Login)
+	tmp.webServer.Router().POST("/front/shutdown", front.Shutdown)
+	tmp.webServer.Router().POST("/front/run", front.Run)
+	tmp.webServer.Router().POST("/front/info", front.Info)
+	tmp.webServer.Router().POST("/backend/shutdown", backend.Shutdown)
+	tmp.webServer.Router().POST("/backend/run", backend.Run)
+	tmp.webServer.Router().POST("/backend/info", backend.Info)
 	Instance = tmp
 	return nil
 }

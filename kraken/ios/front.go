@@ -14,7 +14,7 @@ type front struct {
 }
 
 func (this_ *front) Info() *nw.EngineInfo {
-	return &nw.EngineInfo{Name: "EchoEngine"}
+	return &nw.EngineInfo{Name: "Kraken.Front"}
 }
 
 func (this_ *front) OnConnected(sess *nw.Sess) error {
@@ -58,13 +58,6 @@ func (this_ *front) OnStopped(iosvc *nw.IOService) {
 	if wsAddr != nil {
 		log.Info("front's service ws[%v] has stopped !!!", wsAddr.String())
 	}
-}
-
-func (this_ *front) OnShutdown(iosvc *nw.IOService) {
-	this_.sessMap.Range(func(key, value any) bool {
-		value.(*nw.Sess).Shutdown()
-		return true
-	})
 }
 
 func InitFront(cfg *nw.IOServiceConfig) error {

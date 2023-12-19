@@ -14,7 +14,7 @@ type backend struct {
 }
 
 func (this_ *backend) Info() *nw.EngineInfo {
-	return &nw.EngineInfo{Name: "EchoEngine"}
+	return &nw.EngineInfo{Name: "Kraken.Backend"}
 }
 
 func (this_ *backend) OnConnected(sess *nw.Sess) error {
@@ -48,9 +48,7 @@ func (this_ *backend) OnStopped(iosvc *nw.IOService) {
 	if tcpAddr != nil {
 		log.Info("backend's service tcp[%v] has stopped !!!", tcpAddr.String())
 	}
-}
 
-func (this_ *backend) OnShutdown(iosvc *nw.IOService) {
 	this_.sessMap.Range(func(key, value any) bool {
 		value.(*nw.Sess).Shutdown()
 		return true
