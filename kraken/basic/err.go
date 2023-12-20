@@ -11,4 +11,7 @@ var (
 	Err_CFG_BackendInvalid  = errors.New("config: backend is invalid")
 	Err_CFG_BackendEndpoint = errors.New("config: front.tcp_endpoint is invalid")
 	Err_CFG_ManagerHost     = errors.New("config: manager_host is invalid")
+
+	Err_F_SessIsNotExists = errors.New("front: session is not exists")
+	Err_F_PlayerIsExists  = errors.New("front: player is already exists")
 )

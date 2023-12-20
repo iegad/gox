@@ -6,8 +6,9 @@ import (
 	"syscall"
 
 	"github.com/iegad/gox/frm/log"
+	"github.com/iegad/gox/kraken/b"
 	"github.com/iegad/gox/kraken/conf"
-	"github.com/iegad/gox/kraken/ios"
+	"github.com/iegad/gox/kraken/f"
 	"github.com/iegad/gox/kraken/manager"
 )
 
@@ -17,12 +18,12 @@ func main() {
 		log.Fatal(err)
 	}
 
-	err = ios.InitFront(conf.Instance.Front)
+	err = f.Init(conf.Instance.Front)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = ios.InitBackend(conf.Instance.Backend)
+	err = b.Init(conf.Instance.Backend)
 	if err != nil {
 		log.Fatal(err)
 	}

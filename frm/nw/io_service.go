@@ -146,6 +146,10 @@ func (this_ *IOService) Info() *IOServiceInfo {
 	}
 }
 
+func (this_ *IOService) Engine() IEngine {
+	return this_.engine
+}
+
 func (this_ *IOService) TcpAddr() net.Addr {
 	if this_.tcpAddr != nil {
 		return this_.tcpAddr
@@ -259,8 +263,8 @@ func (this_ *IOService) tcpConnHandle(conn *net.TCPConn, wg *sync.WaitGroup) {
 
 	defer func() {
 		this_.engine.OnDisconnected(sess)
-		conn.Close()
 		atomic.AddInt32(&this_.tcpConnCount, -1)
+		conn.Close()
 		wg.Done()
 	}()
 
@@ -331,8 +335,8 @@ func (this_ *IOService) wsConnHandle(conn *websocket.Conn, wg *sync.WaitGroup) {
 
 	defer func() {
 		this_.engine.OnDisconnected(sess)
-		conn.Close()
 		atomic.AddInt32(&this_.wsConnCount, -1)
+		conn.Close()
 		wg.Done()
 	}()
 

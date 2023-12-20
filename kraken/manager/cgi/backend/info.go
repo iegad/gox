@@ -3,9 +3,9 @@ package backend
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/iegad/gox/frm/web"
-	"github.com/iegad/gox/kraken/ios"
+	"github.com/iegad/gox/kraken/b"
 )
 
 func Info(c *gin.Context) {
-	c.JSON(200, web.NewResponse(0, "", ios.Backend.Info()))
+	c.JSON(200, web.NewResponse(0, "", b.Service.Info()))
 }

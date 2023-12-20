@@ -4,13 +4,13 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/iegad/gox/frm/log"
 	"github.com/iegad/gox/frm/web"
-	"github.com/iegad/gox/kraken/ios"
+	"github.com/iegad/gox/kraken/b"
 )
 
 func Run(c *gin.Context) {
 	code := int32(0)
 
-	err := ios.Backend.Run()
+	err := b.Service.Run()
 	if err != nil {
 		log.Error(err)
 		code = -1

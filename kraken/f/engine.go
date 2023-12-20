@@ -1,40 +1,37 @@
-package ios
+package f
 
 import (
-	"sync"
-
 	"github.com/iegad/gox/frm/log"
 	"github.com/iegad/gox/frm/nw"
+	"github.com/iegad/gox/kraken/m"
 )
 
-var Front *nw.IOService
-
-type front struct {
-	sessMap sync.Map
+type engine struct {
+	PlayerManager m.PlayerManager
 }
 
-func (this_ *front) Info() *nw.EngineInfo {
-	return &nw.EngineInfo{Name: "Kraken.Front"}
+func (this_ *engine) Info() *nw.EngineInfo {
+	return &nw.EngineInfo{Name: "Kraken.Front Service"}
 }
 
-func (this_ *front) OnConnected(sess *nw.Sess) error {
-	this_.sessMap.Store(sess.RemoteAddr().String(), sess)
+func (this_ *engine) OnConnected(sess *nw.Sess) error {
+	this_.PlayerManager.AddSession(sess)
 	log.Info("[%v] is connected", sess.RemoteAddr().String())
 	return nil
 }
 
-func (this_ *front) OnDisconnected(sess *nw.Sess) {
-	this_.sessMap.Delete(sess.RemoteAddr().String())
+func (this_ *engine) OnDisconnected(sess *nw.Sess) {
+	this_.PlayerManager.RemoveSession(sess.RemoteAddr().String())
 	log.Info("[%v] is disconnected", sess.RemoteAddr().String())
 }
 
-func (this_ *front) OnData(sess *nw.Sess, data []byte) error {
+func (this_ *engine) OnData(sess *nw.Sess, data []byte) error {
 	log.Info(string(data))
 	_, err := sess.Write(data)
 	return err
 }
 
-func (this_ *front) OnRun(iosvc *nw.IOService) error {
+func (this_ *engine) OnRun(iosvc *nw.IOService) error {
 	tcpAddr := iosvc.TcpAddr()
 	if tcpAddr != nil {
 		log.Info("front's service tcp[%v] is running ...", tcpAddr.String())
@@ -48,7 +45,7 @@ func (this_ *front) OnRun(iosvc *nw.IOService) error {
 	return nil
 }
 
-func (this_ *front) OnStopped(iosvc *nw.IOService) {
+func (this_ *engine) OnStopped(iosvc *nw.IOService) {
 	tcpAddr := iosvc.TcpAddr()
 	if tcpAddr != nil {
 		log.Info("front's service tcp[%v] has stopped !!!", tcpAddr.String())
@@ -58,14 +55,6 @@ func (this_ *front) OnStopped(iosvc *nw.IOService) {
 	if wsAddr != nil {
 		log.Info("front's service ws[%v] has stopped !!!", wsAddr.String())
 	}
-}
 
-func InitFront(cfg *nw.IOServiceConfig) error {
-	if cfg == nil {
-		log.Fatal("cfg is nil")
-	}
-
-	var err error
-	Front, err = nw.NewIOService(cfg, &front{})
-	return err
+	this_.PlayerManager.Clear()
 }
