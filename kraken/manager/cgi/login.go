@@ -5,7 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/iegad/gox/frm/log"
+	"github.com/iegad/gox/frm/utils"
 	"github.com/iegad/gox/frm/web"
+	"github.com/iegad/gox/kraken/m"
 )
 
 type LoginReq struct {
@@ -31,11 +33,16 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	if len(req.Password) != 32 {
+	if len(req.Password) != 32 || utils.MD5Hex(m.Admin.Password) != req.Password {
 		c.JSON(http.StatusOK, web.NewResponse(-1, "password is invalid", nil))
 		return
 	}
 
-	// TODO: authentication
-	c.JSON(http.StatusOK, web.NewResponse(0, "", &LoginRsp{UserID: 1, Token: "11111111111111111111111111111111"}))
+	if req.UserName != m.Admin.UserName {
+		c.JSON(http.StatusOK, web.NewResponse(-1, "user_name is invalid", nil))
+		return
+	}
+
+	token := m.Admin.GenerateToken()
+	c.JSON(http.StatusOK, web.NewResponse(0, "", &LoginRsp{UserID: 1, Token: token}))
 }

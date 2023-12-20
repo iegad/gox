@@ -9,10 +9,13 @@ import (
 	"github.com/iegad/gox/kraken/b"
 	"github.com/iegad/gox/kraken/conf"
 	"github.com/iegad/gox/kraken/f"
+	"github.com/iegad/gox/kraken/m"
 	"github.com/iegad/gox/kraken/manager"
 )
 
 func main() {
+	m.Init()
+
 	err := conf.LoadConfig("config.yml")
 	if err != nil {
 		log.Fatal(err)
