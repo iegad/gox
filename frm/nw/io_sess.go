@@ -48,6 +48,14 @@ func NewWsSession(conn *websocket.Conn, timeout time.Duration) *Sess {
 	}
 }
 
+func (this_ *Sess) Protocol() string {
+	if this_.tcpConn == nil {
+		return "ws"
+	}
+
+	return "tcp"
+}
+
 func (this_ *Sess) Shutdown() {
 	if this_.tcpConn != nil {
 		this_.tcpConn.Close()

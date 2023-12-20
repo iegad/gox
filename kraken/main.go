@@ -17,21 +17,25 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Info("config.yml 配置加载成功")
 
 	err = f.Init(conf.Instance.Front)
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Info("Front Service 初始化完成")
 
 	err = b.Init(conf.Instance.Backend)
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Info("Backend Service 初始化完成")
 
 	err = manager.Init(conf.Instance.ManangerHost)
 	if err != nil {
 		log.Fatal(err)
 	}
+	log.Info("Manager 初始化完成")
 
 	var (
 		sigs = make(chan os.Signal, 1)
@@ -46,7 +50,8 @@ func main() {
 		done <- true
 	}()
 
+	log.Info("Kraken [%v] 服务开启 ...", conf.Instance.ManangerHost)
 	manager.Instance.Run()
 	<-done
-	log.Info("Kraken is exit !!!")
+	log.Info("Kraken [%v] 服务关闭", conf.Instance.ManangerHost)
 }

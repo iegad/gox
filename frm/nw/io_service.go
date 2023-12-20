@@ -12,34 +12,33 @@ import (
 	"github.com/iegad/gox/frm/log"
 )
 
-var (
-	upgrader = websocket.Upgrader{}
-)
+var upgrader = websocket.Upgrader{}
 
+// 引擎信息
 type EngineInfo struct {
 	Name string `json:"name"`
 }
 
+// 引擎接口
 type IEngine interface {
-	Info() *EngineInfo
-
-	OnConnected(sess *Sess) error
-	OnDisconnected(sess *Sess)
-	OnData(sess *Sess, data []byte) error
-
-	OnRun(iosvc *IOService) error
-	OnStopped(iosvc *IOService)
+	Info() *EngineInfo                    // 引擎信息
+	OnConnected(sess *Sess) error         // 会话连接事件
+	OnDisconnected(sess *Sess)            // 会话连接断开事件
+	OnData(sess *Sess, data []byte) error // 接收数据事件
+	OnRun(iosvc *IOService) error         // 服务启动事件
+	OnStopped(iosvc *IOService)           // 服务停止事件
 }
 
+// IO服务信息
 type IOServiceInfo struct {
-	TcpHost      string      `json:"tcp_host,omitempty"`
-	WsHost       string      `json:"ws_host,omitempty"`
-	TcpConnCount int32       `json:"tcp_connection_count"`
-	WsConnCount  int32       `json:"ws_connection_count"`
-	MaxConn      int32       `json:"max_conn"`
-	Running      bool        `json:"running"`
-	Timeout      int32       `json:"timeout(s)"`
-	Engine       *EngineInfo `json:"engine"`
+	TcpHost      string      `json:"tcp_host,omitempty"`   // TCP监听地址
+	WsHost       string      `json:"ws_host,omitempty"`    // websocket监听地址
+	TcpConnCount int32       `json:"tcp_connection_count"` // Tcp连接数
+	WsConnCount  int32       `json:"ws_connection_count"`  // websocket连接数
+	MaxConn      int32       `json:"max_conn"`             // 最大连接数
+	Running      bool        `json:"running"`              // 运行状态
+	Timeout      int32       `json:"timeout(s)"`           // 超时
+	Engine       *EngineInfo `json:"engine"`               // 服务引擎信息
 }
 
 func (this_ *IOServiceInfo) String() string {
@@ -47,6 +46,7 @@ func (this_ *IOServiceInfo) String() string {
 	return string(jstr)
 }
 
+// IO服务配置
 type IOServiceConfig struct {
 	TcpEndpoint *string `yaml:"tcp_endpoint,omitempty"`
 	WsEndpoint  *string `yaml:"ws_endpoint,omitempty"`
@@ -54,6 +54,7 @@ type IOServiceConfig struct {
 	Timeout     int32   `yaml:"timeout(s),omitempty"`
 }
 
+// IO服务
 type IOService struct {
 	tcpAddr      net.Addr
 	wsAddr       net.Addr
