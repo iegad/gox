@@ -107,7 +107,7 @@ func NewIOService(cfg *IOServiceConfig, engine IEngine) (*IOService, error) {
 		log.Fatal("timeout is less than 0")
 	}
 
-	return &IOService{
+	this_ := &IOService{
 		tcpAddr:      tcpAddr,
 		wsAddr:       wsAddr,
 		tcpListener:  nil,
@@ -117,7 +117,13 @@ func NewIOService(cfg *IOServiceConfig, engine IEngine) (*IOService, error) {
 		wsConnCount:  0,
 		timeout:      time.Duration(cfg.Timeout) * time.Second,
 		engine:       engine,
-	}, nil
+	}
+
+	if this_.wsAddr != nil {
+		http.HandleFunc("/ws", this_.wsHandler)
+	}
+
+	return this_, nil
 }
 
 func (this_ *IOService) Info() *IOServiceInfo {
@@ -303,7 +309,6 @@ func (this_ *IOService) tcpConnHandle(conn *net.TCPConn, wg *sync.WaitGroup) {
 func (this_ *IOService) wsRun(wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	http.HandleFunc("/ws", this_.wsHandler)
 	err := http.Serve(this_.wsListener, nil)
 	if err != nil {
 		log.Error(err)

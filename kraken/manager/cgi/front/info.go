@@ -8,12 +8,8 @@ import (
 	"github.com/iegad/gox/kraken/m"
 )
 
-type InfoReq struct {
-	web.BasicRequest
-}
-
 func Info(c *gin.Context) {
-	req := &InfoReq{}
+	req := &web.BasicRequest{}
 	err := c.BindJSON(req)
 	if err != nil {
 		log.Error(err)
