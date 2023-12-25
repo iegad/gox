@@ -3,22 +3,19 @@ package f
 import (
 	"github.com/iegad/gox/frm/log"
 	"github.com/iegad/gox/frm/nw"
-	"github.com/iegad/gox/kraken/basic"
 	"github.com/iegad/gox/kraken/f/handlers"
 	"github.com/iegad/gox/kraken/m"
 	"github.com/iegad/gox/pb"
 	"google.golang.org/protobuf/proto"
 )
 
-type Handler func(sess *nw.Sess, in *pb.Package) error
-
 type engine struct {
-	handlers map[int32]Handler
+	handlers map[int32]m.Handler
 }
 
 func newEngine() *engine {
 	this_ := &engine{
-		handlers: make(map[int32]Handler),
+		handlers: make(map[int32]m.Handler),
 	}
 
 	this_.addHandler(pb.MID_UserLoginReq, handlers.UserLogin)
@@ -26,7 +23,7 @@ func newEngine() *engine {
 	return this_
 }
 
-func (this_ *engine) addHandler(mid int32, h Handler) {
+func (this_ *engine) addHandler(mid int32, h m.Handler) {
 	if _, ok := this_.handlers[mid]; ok {
 		log.Fatal("%v has already exists", mid)
 	}
@@ -57,13 +54,15 @@ func (this_ *engine) OnData(sess *nw.Sess, data []byte) error {
 	}
 
 	if pack.MessageID == 0 {
-		return basic.Err_F_MessageIDInvalid
+		return m.Err_F_MessageIDInvalid
 	}
 
-	if pack.NodeID == 0 {
+	if len(pack.NodeCode) == 0 {
 		if handler, ok := this_.handlers[pack.MessageID]; ok {
 			err = handler(sess, pack)
 			return err
+		} else {
+			return m.Err_F_MessageIDInvalid
 		}
 	}
 

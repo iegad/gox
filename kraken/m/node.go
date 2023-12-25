@@ -1,6 +1,11 @@
 package m
 
-import "github.com/iegad/gox/frm/nw"
+import (
+	"github.com/iegad/gox/frm/nw"
+	"github.com/iegad/gox/pb"
+)
+
+type Handler func(sess *nw.Sess, in *pb.Package) error
 
 type node struct {
 	NodeID   int32

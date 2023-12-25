@@ -1,4 +1,4 @@
-package basic
+package m
 
 import "errors"
 

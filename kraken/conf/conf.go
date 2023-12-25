@@ -6,7 +6,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/iegad/gox/frm/log"
 	"github.com/iegad/gox/frm/nw"
-	"github.com/iegad/gox/kraken/basic"
+	"github.com/iegad/gox/kraken/m"
 	"gopkg.in/yaml.v3"
 )
 
@@ -64,35 +64,35 @@ func LoadConfig(filename string) error {
 	}
 
 	if tmp.Front == nil {
-		return basic.Err_CFG_FrontInvalid
+		return m.Err_CFG_FrontInvalid
 	}
 
 	if tmp.Front.MaxConn <= 0 {
-		return basic.Err_CFG_FrontMaxConn
+		return m.Err_CFG_FrontMaxConn
 	}
 
 	if tmp.Front.TcpEndpoint == nil && tmp.Front.WsEndpoint == nil {
-		return basic.Err_CFG_FrontEndpoint
+		return m.Err_CFG_FrontEndpoint
 	}
 
 	if tmp.Front.Timeout <= 0 {
-		return basic.Err_CFG_FrontTimeout
+		return m.Err_CFG_FrontTimeout
 	}
 
 	if tmp.Backend == nil {
-		return basic.Err_CFG_BackendInvalid
+		return m.Err_CFG_BackendInvalid
 	}
 
 	if tmp.Backend.TcpEndpoint == nil {
-		return basic.Err_CFG_BackendEndpoint
+		return m.Err_CFG_BackendEndpoint
 	}
 
 	if len(tmp.NodeCode) != 36 {
-		return basic.Err_CFG_NodeCodeInvalid
+		return m.Err_CFG_NodeCodeInvalid
 	}
 
 	if len(tmp.ManangerHost) == 0 {
-		return basic.Err_CFG_ManagerHost
+		return m.Err_CFG_ManagerHost
 	}
 
 	Instance = tmp

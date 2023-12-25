@@ -22,7 +22,7 @@ func Init(cfg *nw.IOServiceConfig) error {
 		log.Fatal("front's service is already initialized")
 	}
 
-	e := &engine{}
+	e := newEngine()
 
 	ios, err := nw.NewIOService(cfg, e)
 	if err != nil {

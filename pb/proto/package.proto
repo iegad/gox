@@ -5,7 +5,7 @@ option go_package = "/pb";
 
 
 message Package {
-    int32 NodeID     = 1;
+    bytes NodeCode   = 1;
     int32 MessageID  = 2;
     int32 UserID     = 3;
     int64 Idempotent = 4;
