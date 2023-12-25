@@ -33,5 +33,6 @@ func (this_ *admin) Login(ipAddr string) string {
 	binary.BigEndian.PutUint64(tmp, rint)
 	this_.Token = hex.EncodeToString(tmp)
 	this_.IPAddr = ipAddr
+	this_.Idempotent = 0
 	return this_.Token
 }
