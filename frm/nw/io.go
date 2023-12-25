@@ -11,6 +11,8 @@ import (
 	"github.com/iegad/gox/frm/log"
 )
 
+const _HeaderKey = uint32(0xFAFBFCFD)
+
 func write(conn net.Conn, data []byte, timeout time.Duration) (int, error) {
 
 	if conn == nil {
@@ -26,7 +28,7 @@ func write(conn net.Conn, data []byte, timeout time.Duration) (int, error) {
 
 	dlen := len(data)
 	wbuf := make([]byte, dlen+UINT32_SIZE)
-	binary.BigEndian.PutUint32(wbuf[:UINT32_SIZE], uint32(dlen))
+	binary.BigEndian.PutUint32(wbuf[:UINT32_SIZE], uint32(dlen)^_HeaderKey)
 	copy(wbuf[UINT32_SIZE:], data)
 	return conn.Write(wbuf)
 }

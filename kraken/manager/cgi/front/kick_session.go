@@ -3,7 +3,6 @@ package front
 import (
 	"github.com/gin-gonic/gin"
 	"github.com/iegad/gox/frm/web"
-	"github.com/iegad/gox/kraken/f"
 	"github.com/iegad/gox/kraken/m"
 )
 
@@ -42,6 +41,6 @@ func KickSession(c *gin.Context) {
 		return
 	}
 
-	f.Service.Engine.PlayerManager.RemoveSession(req.RemoteAddr)
+	m.Players.RemoveSession(req.RemoteAddr)
 	web.Response(c, 0, "", nil)
 }

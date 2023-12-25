@@ -3,11 +3,35 @@ package f
 import (
 	"github.com/iegad/gox/frm/log"
 	"github.com/iegad/gox/frm/nw"
+	"github.com/iegad/gox/kraken/basic"
+	"github.com/iegad/gox/kraken/f/handlers"
 	"github.com/iegad/gox/kraken/m"
+	"github.com/iegad/gox/pb"
+	"google.golang.org/protobuf/proto"
 )
 
+type Handler func(sess *nw.Sess, in *pb.Package) error
+
 type engine struct {
-	PlayerManager m.PlayerManager
+	handlers map[int32]Handler
+}
+
+func newEngine() *engine {
+	this_ := &engine{
+		handlers: make(map[int32]Handler),
+	}
+
+	this_.addHandler(pb.MID_UserLoginReq, handlers.UserLogin)
+
+	return this_
+}
+
+func (this_ *engine) addHandler(mid int32, h Handler) {
+	if _, ok := this_.handlers[mid]; ok {
+		log.Fatal("%v has already exists", mid)
+	}
+
+	this_.handlers[mid] = h
 }
 
 func (this_ *engine) Info() *nw.EngineInfo {
@@ -15,20 +39,35 @@ func (this_ *engine) Info() *nw.EngineInfo {
 }
 
 func (this_ *engine) OnConnected(sess *nw.Sess) error {
-	this_.PlayerManager.AddSession(sess)
+	m.Players.AddSession(sess)
 	log.Info("%v[%v] 连接成功", sess.Protocol(), sess.RemoteAddr().String())
 	return nil
 }
 
 func (this_ *engine) OnDisconnected(sess *nw.Sess) {
-	this_.PlayerManager.RemoveSession(sess.RemoteAddr().String())
+	m.Players.RemoveSession(sess.RemoteAddr().String())
 	log.Info("%v[%v] 连接断开", sess.Protocol(), sess.RemoteAddr().String())
 }
 
 func (this_ *engine) OnData(sess *nw.Sess, data []byte) error {
-	log.Info(string(data))
-	_, err := sess.Write(data)
-	return err
+	pack := &pb.Package{}
+	err := proto.Unmarshal(data, pack)
+	if err != nil {
+		return err
+	}
+
+	if pack.MessageID == 0 {
+		return basic.Err_F_MessageIDInvalid
+	}
+
+	if pack.NodeID == 0 {
+		if handler, ok := this_.handlers[pack.MessageID]; ok {
+			err = handler(sess, pack)
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (this_ *engine) OnRun(iosvc *nw.IOService) error {
@@ -56,5 +95,5 @@ func (this_ *engine) OnStopped(iosvc *nw.IOService) {
 		log.Info("Front Service ws[%v] 服务关闭", wsAddr.String())
 	}
 
-	this_.PlayerManager.Clear()
+	m.Players.Clear()
 }

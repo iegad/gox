@@ -116,7 +116,7 @@ func (this_ *Sess) tcpRead() ([]byte, error) {
 		}
 
 		if nHead == 0 && len(this_.rbuf) >= UINT32_SIZE {
-			nHead = binary.BigEndian.Uint32(this_.rbuf[:UINT32_SIZE])
+			nHead = binary.BigEndian.Uint32(this_.rbuf[:UINT32_SIZE]) ^ _HeaderKey
 			if nHead > MAX_BUF_SIZE || nHead == 0 {
 				return nil, ErrInvalidBufSize
 			}

@@ -6,7 +6,11 @@ require (
 	github.com/gin-contrib/cors v1.5.0
 	github.com/gin-gonic/gin v1.9.1
 	github.com/gorilla/websocket v1.5.1
+	github.com/iegad/gox/pb v0.0.1
+	google.golang.org/protobuf v1.32.0
 )
+
+replace github.com/iegad/gox/pb v0.0.1 => ../pb
 
 require (
 	github.com/bytedance/sonic v1.10.1 // indirect
@@ -33,6 +37,5 @@ require (
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )

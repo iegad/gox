@@ -1,12 +1,36 @@
-package m
+package game
 
 import (
+	"encoding/binary"
+	"log"
+	"math/rand"
 	"sync"
 
-	"github.com/iegad/gox/frm/log"
 	"github.com/iegad/gox/frm/nw"
-	"github.com/iegad/gox/kraken/basic"
 )
+
+type player struct {
+	UserID int64
+	Token  []byte
+	sess   *nw.Sess
+}
+
+func NewPlayer(userID int64, sess *nw.Sess) *player {
+	rint := rand.Uint64()
+
+	tmp := &player{
+		UserID: userID,
+		sess:   sess,
+	}
+
+	sess.UserData = tmp
+	binary.BigEndian.PutUint64(tmp.Token, rint)
+	return tmp
+}
+
+func (this_ *player) Session() *nw.Sess {
+	return this_.sess
+}
 
 type PlayerManager struct {
 	playerMap sync.Map
@@ -18,7 +42,7 @@ func (this_ *PlayerManager) AddPlayer(plr *player) error {
 	}
 
 	if _, ok := this_.playerMap.Load(plr.UserID); ok {
-		return basic.Err_F_PlayerIsExists
+		return Err_PlayerIsExists
 	}
 
 	this_.playerMap.Delete(plr.sess.RemoteAddr().String())

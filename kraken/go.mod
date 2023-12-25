@@ -6,6 +6,8 @@ require (
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.5.0
 	github.com/iegad/gox/frm v0.0.1
+	github.com/iegad/gox/pb v0.0.1
+	google.golang.org/protobuf v1.32.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -35,7 +37,8 @@ require (
 	golang.org/x/net v0.17.0 // indirect
 	golang.org/x/sys v0.13.0 // indirect
 	golang.org/x/text v0.13.0 // indirect
-	google.golang.org/protobuf v1.31.0 // indirect
 )
 
 replace github.com/iegad/gox/frm v0.0.1 => ../frm
+
+replace github.com/iegad/gox/pb v0.0.1 => ../pb

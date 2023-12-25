@@ -7,7 +7,6 @@ import (
 )
 
 type engine struct {
-	nodeManager m.NodeManager
 }
 
 func (this_ *engine) Info() *nw.EngineInfo {
@@ -15,13 +14,13 @@ func (this_ *engine) Info() *nw.EngineInfo {
 }
 
 func (this_ *engine) OnConnected(sess *nw.Sess) error {
-	this_.nodeManager.AddSession(sess)
+	m.Nodes.AddSession(sess)
 	log.Info("[%v] 连接成功", sess.RemoteAddr().String())
 	return nil
 }
 
 func (this_ *engine) OnDisconnected(sess *nw.Sess) {
-	this_.nodeManager.RemoveSession(sess.RemoteAddr().String())
+	m.Nodes.RemoveSession(sess.RemoteAddr().String())
 	log.Info("[%v] 断开连接", sess.RemoteAddr().String())
 }
 
@@ -46,5 +45,5 @@ func (this_ *engine) OnStopped(iosvc *nw.IOService) {
 		log.Info("Backend Service TCP[%v] 服务关闭", tcpAddr.String())
 	}
 
-	this_.nodeManager.Clear()
+	m.Nodes.Clear()
 }
