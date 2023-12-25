@@ -21,20 +21,20 @@ func Info(c *gin.Context) {
 	}
 
 	if req.UserID == nil || *req.UserID != 1 {
-		c.JSON(200, web.NewResponse(-1, "user_id is invalid", nil))
+		web.Response(c, -1, "user_id is invalid", nil)
 		return
 	}
 
 	if req.Token == nil || len(*req.Token) != 16 || *req.Token != m.Admin.Token {
-		c.JSON(200, web.NewResponse(-1, "token is invalid", nil))
+		web.Response(c, -1, "token is invalid", nil)
 		return
 	}
 
 	if req.Idempotent == nil || *req.Idempotent <= m.Admin.Idempotent {
-		c.JSON(200, web.NewResponse(-1, "idemponent is invalid", nil))
+		web.Response(c, -1, "idempotent is invalid", nil)
 		return
 	}
 
 	m.Admin.Idempotent = *req.Idempotent
-	c.JSON(200, web.NewResponse(0, "", f.Service.Info()))
+	web.Response(c, 0, "", f.Service.Info())
 }

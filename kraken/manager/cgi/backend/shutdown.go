@@ -8,5 +8,5 @@ import (
 
 func Shutdown(c *gin.Context) {
 	b.Service.Shutdown()
-	c.JSON(200, web.NewResponse(0, "", nil))
+	web.Response(c, 0, "", nil)
 }

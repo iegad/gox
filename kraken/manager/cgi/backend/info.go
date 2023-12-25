@@ -7,5 +7,5 @@ import (
 )
 
 func Info(c *gin.Context) {
-	c.JSON(200, web.NewResponse(0, "", b.Service.Info()))
+	web.Response(c, 0, "", b.Service.Info())
 }

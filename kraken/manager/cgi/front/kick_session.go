@@ -15,15 +15,15 @@ func KickSession(c *gin.Context) {
 	req := &KickSessionReq{}
 	err := c.BindJSON(req)
 	if err != nil {
-		c.JSON(200, web.NewResponse(-1, err.Error(), nil))
+		web.Response(c, -1, err.Error(), nil)
 		return
 	}
 
 	if len(req.RemoteAddr) == 0 {
-		c.JSON(200, web.NewResponse(-1, "remote_addr is invalid", nil))
+		web.Response(c, -1, "remote_addr is invalid", nil)
 		return
 	}
 
 	f.Service.Engine.PlayerManager.RemoveSession(req.RemoteAddr)
-	c.JSON(200, web.NewResponse(0, "", nil))
+	web.Response(c, 0, "", nil)
 }

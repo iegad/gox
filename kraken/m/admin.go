@@ -4,11 +4,11 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"math/rand"
-	"time"
 
-	"github.com/iegad/gox/frm/log"
 	"github.com/iegad/gox/frm/utils"
 )
+
+const PWD = "1234567890"
 
 var Admin *admin
 
@@ -17,28 +17,21 @@ type admin struct {
 	Password   string
 	Token      string
 	Idempotent int64
+	IPAddr     string
 }
 
 func Init() {
 	Admin = &admin{
-		UserName: "admin",
+		UserName: "root",
+		Password: utils.MD5Hex(PWD),
 	}
-
-	go func() {
-		for {
-			pwd := utils.RandPassword(16, true)
-			log.Info("%v: %v", pwd, len(pwd))
-			Admin.Password = pwd
-			interval := rand.Int63n(6) + 1
-			time.Sleep(time.Hour * time.Duration(interval))
-		}
-	}()
 }
 
-func (this_ *admin) GenerateToken() string {
+func (this_ *admin) Login(ipAddr string) string {
 	rint := rand.Uint64()
 	tmp := make([]byte, 8)
 	binary.BigEndian.PutUint64(tmp, rint)
 	this_.Token = hex.EncodeToString(tmp)
+	this_.IPAddr = ipAddr
 	return this_.Token
 }

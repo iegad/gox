@@ -1,11 +1,8 @@
 package cgi
 
 import (
-	"net/http"
-
 	"github.com/gin-gonic/gin"
 	"github.com/iegad/gox/frm/log"
-	"github.com/iegad/gox/frm/utils"
 	"github.com/iegad/gox/frm/web"
 	"github.com/iegad/gox/kraken/m"
 )
@@ -28,21 +25,16 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	if len(req.UserName) == 0 || len(req.UserName) < 5 || len(req.UserName) > 16 {
-		c.JSON(http.StatusOK, web.NewResponse(-1, "user_name is invalid", nil))
+	if len(req.UserName) == 0 || req.UserName != m.Admin.UserName {
+		web.Response(c, -1, "user_name is invalid", nil)
 		return
 	}
 
-	if len(req.Password) != 32 || utils.MD5Hex(m.Admin.Password) != req.Password {
-		c.JSON(http.StatusOK, web.NewResponse(-1, "password is invalid", nil))
+	if len(req.Password) != 32 || m.Admin.Password != req.Password {
+		web.Response(c, -1, "password is invalid", nil)
 		return
 	}
 
-	if req.UserName != m.Admin.UserName {
-		c.JSON(http.StatusOK, web.NewResponse(-1, "user_name is invalid", nil))
-		return
-	}
-
-	token := m.Admin.GenerateToken()
-	c.JSON(http.StatusOK, web.NewResponse(0, "", &LoginRsp{UserID: 1, Token: token}))
+	token := m.Admin.Login(c.RemoteIP())
+	web.Response(c, 0, "", &LoginRsp{UserID: 1, Token: token})
 }

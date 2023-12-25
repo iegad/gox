@@ -8,13 +8,12 @@ import (
 )
 
 func Run(c *gin.Context) {
-	code := int32(0)
-
 	err := b.Service.Run()
 	if err != nil {
 		log.Error(err)
-		code = -1
+		web.Response(c, -1, err.Error(), nil)
+		return
 	}
 
-	c.JSON(200, web.NewResponse(code, err.Error(), nil))
+	web.Response(c, 0, "", nil)
 }
