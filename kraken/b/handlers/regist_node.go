@@ -35,13 +35,6 @@ func RegistNode(sess *nw.Sess, in *pb.Package) error {
 		return err
 	}
 
-	if req.NodeID <= 0 {
-		return registNodeRsp(sess, req, &pb.RegistNodeRsp{
-			Code:  -1,
-			Error: m.Err_B_NodeIDInvalid.Error(),
-		})
-	}
-
 	if len(req.NodeUID) != 16 {
 		return registNodeRsp(sess, req, &pb.RegistNodeRsp{
 			Code:  -1,

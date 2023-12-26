@@ -32,16 +32,15 @@ type message struct {
 }
 
 type Node struct {
-	NodeID     int32
 	NodeCode   string
 	Idempotent int64
-	cMap       sync.Map
+	proxyMap   sync.Map
 	wg         sync.WaitGroup
 	handlers   map[int32]NodeHandler
 	msgCh      chan *message
 }
 
-func NewNode(nodeID int32, nodeUID []byte) *Node {
+func NewNode(nodeUID []byte) *Node {
 	if len(nodeUID) != 16 {
 		log.Fatal("nodeID is invalid")
 	}
@@ -52,7 +51,6 @@ func NewNode(nodeID int32, nodeUID []byte) *Node {
 	}
 
 	return &Node{
-		NodeID:   nodeID,
 		NodeCode: nodeCode,
 		msgCh:    make(chan *message, 10000),
 	}
@@ -90,6 +88,11 @@ func (this_ *Node) AddHandler(h NodeHandler) {
 }
 
 func (this_ *Node) AddProxy(nodeCode, rep string) {
+	if _, ok := this_.proxyMap.Load(rep); ok {
+		return
+	}
+
+	this_.proxyMap.Store(rep, nil)
 	go this_.runProxy(nodeCode, rep)
 }
 
@@ -101,7 +104,6 @@ func (this_ *Node) registNode(nodeCode string, c *nw.Client) error {
 
 	this_.Idempotent++
 	data, err := proto.Marshal(&pb.RegistNodeReq{
-		NodeID:  this_.NodeID,
 		NodeUID: nodeUID[:],
 	})
 	if err != nil {
@@ -170,7 +172,12 @@ func (this_ *Node) runProxy(nodeCode, rep string) {
 		}
 		log.Info("连接网关[%v:%v]...成功", rep, nodeCode)
 		c.UserData = this_
-		this_.cMap.Store(rep, c)
+		if v, ok := this_.proxyMap.LoadAndDelete(rep); ok {
+			if tmpc, ok := v.(*nw.Client); ok {
+				tmpc.Raw().Close()
+			}
+		}
+		this_.proxyMap.Store(rep, c)
 		this_.wg.Add(1)
 
 		log.Info("注册网关[%v:%v]...开始", rep, nodeCode)

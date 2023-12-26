@@ -21,7 +21,7 @@ type krakenConfig struct {
 	UCode        []byte              `yaml:"-"`
 }
 
-func LoadConfig(filename string) error {
+func LoadConfig(filename string) {
 	rbuf, err := os.ReadFile(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
@@ -34,17 +34,15 @@ func LoadConfig(filename string) error {
 				Timeout:     -1,
 			}
 
-			def := &krakenConfig{
+			wbuf, err := yaml.Marshal(&krakenConfig{
 				NodeCode:     uuid.NewString(),
 				ManangerHost: "",
 				Seqence:      0,
 				Front:        svcConfig,
 				Backend:      svcConfig,
-			}
-
-			wbuf, err := yaml.Marshal(def)
+			})
 			if err != nil {
-				return err
+				log.Fatal(err)
 			}
 
 			err = os.WriteFile(filename, wbuf, 0755)
@@ -52,50 +50,49 @@ func LoadConfig(filename string) error {
 				log.Fatal(err)
 			}
 
-			log.Info("Please configure the service settings: %s", filename)
+			log.Info("初次启动请手动修改配置文件: %s", filename)
 			os.Exit(0)
 		}
-		return err
+		log.Fatal(err)
 	}
 
 	tmp := &krakenConfig{}
 	err = yaml.Unmarshal(rbuf, tmp)
 	if err != nil {
-		return err
+		log.Fatal(err)
 	}
 
 	if tmp.Front == nil {
-		return m.Err_CFG_FrontInvalid
+		log.Fatal(m.Err_CFG_FrontInvalid)
 	}
 
 	if tmp.Front.MaxConn <= 0 {
-		return m.Err_CFG_FrontMaxConn
+		log.Fatal(m.Err_CFG_FrontMaxConn)
 	}
 
 	if tmp.Front.TcpEndpoint == nil && tmp.Front.WsEndpoint == nil {
-		return m.Err_CFG_FrontEndpoint
+		log.Fatal(m.Err_CFG_FrontEndpoint)
 	}
 
 	if tmp.Front.Timeout <= 0 {
-		return m.Err_CFG_FrontTimeout
+		log.Fatal(m.Err_CFG_FrontTimeout)
 	}
 
 	if tmp.Backend == nil {
-		return m.Err_CFG_BackendInvalid
+		log.Fatal(m.Err_CFG_BackendInvalid)
 	}
 
 	if tmp.Backend.TcpEndpoint == nil {
-		return m.Err_CFG_BackendEndpoint
+		log.Fatal(m.Err_CFG_BackendEndpoint)
 	}
 
 	if len(tmp.NodeCode) != 36 {
-		return m.Err_CFG_NodeCodeInvalid
+		log.Fatal(m.Err_CFG_NodeCodeInvalid)
 	}
 
 	if len(tmp.ManangerHost) == 0 {
-		return m.Err_CFG_ManagerHost
+		log.Fatal(m.Err_CFG_ManagerHost)
 	}
 
 	Instance = tmp
-	return nil
 }

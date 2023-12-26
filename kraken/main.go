@@ -16,13 +16,10 @@ import (
 func main() {
 	m.Init()
 
-	err := conf.LoadConfig("config.yml")
-	if err != nil {
-		log.Fatal(err)
-	}
+	conf.LoadConfig("config.yml")
 	log.Info("config.yml 配置加载成功")
 
-	err = f.Init(conf.Instance.Front)
+	err := f.Init(conf.Instance.Front)
 	if err != nil {
 		log.Fatal(err)
 	}
