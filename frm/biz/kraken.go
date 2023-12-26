@@ -21,7 +21,7 @@ func GetKrakenFromRedis(r *redis.Client) ([]*Kraken, error) {
 		log.Fatal("r is nil")
 	}
 
-	ctx, _ := context.WithTimeout(context.TODO(), time.Second*15)
+	ctx, cancel := context.WithTimeout(context.TODO(), time.Second*15)
 	arr, err := r.Keys(ctx, "KRAKEN_*").Result()
 	if err != nil {
 		return nil, err
@@ -42,6 +42,6 @@ func GetKrakenFromRedis(r *redis.Client) ([]*Kraken, error) {
 
 		result = append(result, item)
 	}
-
+	cancel()
 	return result, nil
 }

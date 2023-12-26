@@ -4,9 +4,9 @@ import (
 	"os"
 
 	"github.com/google/uuid"
+	"github.com/iegad/gox/frm/db"
 	"github.com/iegad/gox/frm/log"
 	"github.com/iegad/gox/frm/nw"
-	"github.com/iegad/gox/kraken/m"
 	"gopkg.in/yaml.v3"
 )
 
@@ -14,11 +14,11 @@ var Instance *krakenConfig
 
 type krakenConfig struct {
 	NodeCode     string              `yaml:"node_code"`
-	Seqence      uint32              `yaml:"Seqence"`
 	ManangerHost string              `yaml:"manager_host"`
 	Front        *nw.IOServiceConfig `yaml:"front,omitempty"`
 	Backend      *nw.IOServiceConfig `yaml:"backend,omitempty"`
-	UCode        []byte              `yaml:"-"`
+	Redis        *db.RedisConfig     `yaml:"redis"`
+	NodeUID      []byte              `yaml:"-"`
 }
 
 func LoadConfig(filename string) {
@@ -37,9 +37,9 @@ func LoadConfig(filename string) {
 			wbuf, err := yaml.Marshal(&krakenConfig{
 				NodeCode:     uuid.NewString(),
 				ManangerHost: "",
-				Seqence:      0,
 				Front:        svcConfig,
 				Backend:      svcConfig,
+				Redis:        &db.RedisConfig{},
 			})
 			if err != nil {
 				log.Fatal(err)
@@ -63,36 +63,42 @@ func LoadConfig(filename string) {
 	}
 
 	if tmp.Front == nil {
-		log.Fatal(m.Err_CFG_FrontInvalid)
+		log.Fatal("config: front is invalid")
 	}
 
 	if tmp.Front.MaxConn <= 0 {
-		log.Fatal(m.Err_CFG_FrontMaxConn)
+		log.Fatal("config: front's max_conn is invalid")
 	}
 
 	if tmp.Front.TcpEndpoint == nil && tmp.Front.WsEndpoint == nil {
-		log.Fatal(m.Err_CFG_FrontEndpoint)
+		log.Fatal("config: front's tcp and ws endpoint is invalid")
 	}
 
 	if tmp.Front.Timeout <= 0 {
-		log.Fatal(m.Err_CFG_FrontTimeout)
+		log.Fatal("config: front's timeout is invalid")
 	}
 
 	if tmp.Backend == nil {
-		log.Fatal(m.Err_CFG_BackendInvalid)
+		log.Fatal("config: backend is invalid")
 	}
 
 	if tmp.Backend.TcpEndpoint == nil {
-		log.Fatal(m.Err_CFG_BackendEndpoint)
+		log.Fatal("config: backend's tcp endpoint is invalid")
 	}
 
 	if len(tmp.NodeCode) != 36 {
-		log.Fatal(m.Err_CFG_NodeCodeInvalid)
+		log.Fatal("config: node_code is invalid")
 	}
 
 	if len(tmp.ManangerHost) == 0 {
-		log.Fatal(m.Err_CFG_ManagerHost)
+		log.Fatal("config: manager_host is invalid")
 	}
 
+	uid, err := uuid.Parse(tmp.NodeCode)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	tmp.NodeUID = uid[:]
 	Instance = tmp
 }

@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"runtime"
 	"sync"
-	"time"
 
 	"github.com/google/uuid"
 	"github.com/iegad/gox/frm/log"
@@ -93,6 +92,7 @@ func (this_ *Node) AddProxy(nodeCode, rep string) {
 	}
 
 	this_.proxyMap.Store(rep, nil)
+	this_.wg.Add(1)
 	go this_.runProxy(nodeCode, rep)
 }
 
@@ -161,78 +161,83 @@ func (this_ *Node) registNode(nodeCode string, c *nw.Client) error {
 }
 
 func (this_ *Node) runProxy(nodeCode, rep string) {
-	defer this_.wg.Done()
-
-	for {
-		log.Info("连接网关[%v:%v]...开始", rep, nodeCode)
-		c, err := nw.NewTcpClient("", rep, 0)
-		if err != nil {
-			time.Sleep(time.Second)
-			continue
-		}
-		log.Info("连接网关[%v:%v]...成功", rep, nodeCode)
-		c.UserData = this_
+	defer func() {
 		if v, ok := this_.proxyMap.LoadAndDelete(rep); ok {
-			if tmpc, ok := v.(*nw.Client); ok {
-				tmpc.Raw().Close()
+			if px, ok := v.(*nw.Client); ok {
+				px.Raw().Close()
 			}
 		}
-		this_.proxyMap.Store(rep, c)
-		this_.wg.Add(1)
+		log.Warn("连接网关[%v:%v]...断开", rep, nodeCode)
+		this_.wg.Done()
+	}()
 
-		log.Info("注册网关[%v:%v]...开始", rep, nodeCode)
-		err = this_.registNode(nodeCode, c)
-		if err != nil {
-			log.Error(err)
-			time.Sleep(time.Second)
-			continue
-		}
-
-		log.Info("注册网关[%v:%v]...成功", rep, nodeCode)
-		for {
-			data, err := c.TcpRead()
-			if err != nil {
-				log.Error(err)
-				break
-			}
-
-			in := &pb.Package{}
-			err = proto.Unmarshal(data, in)
-			if err != nil {
-				log.Error(err)
-				break
-			}
-
-			if len(in.NodeUID) != 16 {
-				log.Error("in.NodeCode is invalid: %v", c.Raw().RemoteAddr().String())
-				break
-			}
-
-			nstr, err := NodeUIDToCode(in.NodeUID)
-			if err != nil {
-				log.Error(err)
-				break
-			}
-
-			if nstr != this_.NodeCode {
-				log.Error("in.NodeCode is invalid: %v <> %v", nstr, this_.NodeCode)
-				break
-			}
-
-			if len(in.RealAddr) == 0 {
-				log.Error("real addr is invalid: %v", c.Raw().RemoteAddr().String())
-				break
-			}
-
-			msg := &message{
-				c:    c,
-				pack: in,
-			}
-
-			this_.msgCh <- msg
-		}
+	log.Info("连接网关[%v:%v]...开始", rep, nodeCode)
+	c, err := nw.NewTcpClient("", rep, 0)
+	if err != nil {
+		log.Error(err)
+		return
 	}
 
+	log.Info("连接网关[%v:%v]...成功", rep, nodeCode)
+	c.UserData = this_
+	if v, ok := this_.proxyMap.LoadAndDelete(rep); ok {
+		if tmpc, ok := v.(*nw.Client); ok {
+			tmpc.Raw().Close()
+		}
+	}
+	this_.proxyMap.Store(rep, c)
+	this_.wg.Add(1)
+
+	log.Info("注册网关[%v:%v]...开始", rep, nodeCode)
+	err = this_.registNode(nodeCode, c)
+	if err != nil {
+		log.Error(err)
+		return
+	}
+
+	log.Info("注册网关[%v:%v]...成功", rep, nodeCode)
+	for {
+		data, err := c.TcpRead()
+		if err != nil {
+			log.Error(err)
+			break
+		}
+
+		in := &pb.Package{}
+		err = proto.Unmarshal(data, in)
+		if err != nil {
+			log.Error(err)
+			break
+		}
+
+		if len(in.NodeUID) != 16 {
+			log.Error("in.NodeCode is invalid: %v", c.Raw().RemoteAddr().String())
+			break
+		}
+
+		nstr, err := NodeUIDToCode(in.NodeUID)
+		if err != nil {
+			log.Error(err)
+			break
+		}
+
+		if nstr != this_.NodeCode {
+			log.Error("in.NodeCode is invalid: %v <> %v", nstr, this_.NodeCode)
+			break
+		}
+
+		if len(in.RealAddr) == 0 {
+			log.Error("real addr is invalid: %v", c.Raw().RemoteAddr().String())
+			break
+		}
+
+		msg := &message{
+			c:    c,
+			pack: in,
+		}
+
+		this_.msgCh <- msg
+	}
 }
 
 func (this_ *Node) KickPlayer(c *nw.Client, realAddr string) {

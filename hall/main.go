@@ -21,8 +21,8 @@ func main() {
 	}()
 
 	conf.Init("config.yaml")
-	go m.RunKeepAlived()
 	m.InitHall()
+	go m.RunKeepAlived()
 
 	m.HallNode.Run(4)
 }

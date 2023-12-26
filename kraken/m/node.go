@@ -50,7 +50,6 @@ func (this_ *NodeManager) Add(sess *nw.Sess) {
 }
 
 func (this_ *NodeManager) AddNode(nd *Node) {
-	log.Info(nd.NodeCode)
 	if len(nd.NodeCode) != 36 || nd.Sess == nil || nd.Sess.UserData == nil {
 		log.Fatal("n is invalid")
 	}

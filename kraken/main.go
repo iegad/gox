@@ -37,6 +37,9 @@ func main() {
 	}
 	log.Info("Manager 初始化完成")
 
+	go m.RunKeepAlived()
+	log.Info("Redis 连接成功")
+
 	var (
 		sigs = make(chan os.Signal, 1)
 		done = make(chan bool, 1)
