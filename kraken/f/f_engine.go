@@ -57,7 +57,7 @@ func (this_ *f_engine) OnData(sess *nw.Sess, data []byte) error {
 		return m.Err_F_MessageIDInvalid
 	}
 
-	if len(pack.NodeCode) == 0 {
+	if len(pack.NodeUID) == 0 {
 		if handler, ok := this_.handlers[pack.MessageID]; ok {
 			err = handler(sess, pack)
 			return err

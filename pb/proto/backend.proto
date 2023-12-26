@@ -5,8 +5,8 @@ option go_package = "/pb";
 
 
 message RegistNodeReq {
-    int32 NodeID   = 1;
-    bytes NodeCode = 2;
+    int32 NodeID  = 1;
+    bytes NodeUID = 2;
 }
 
 message RegistNodeRsp {

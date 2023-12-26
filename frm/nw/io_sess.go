@@ -64,10 +64,10 @@ func (this_ *Sess) Shutdown() {
 
 func (this_ *Sess) Write(data []byte) (int, error) {
 	if this_.tcpConn != nil {
-		return this_.tcpWrite(data)
+		return this_.TcpWrite(data)
 	}
 
-	return this_.wsWrite(data)
+	return this_.WsWrite(data)
 }
 
 func (this_ *Sess) RemoteAddr() net.Addr {
@@ -134,11 +134,11 @@ func (this_ *Sess) tcpRead() ([]byte, error) {
 	}
 }
 
-func (this_ *Sess) tcpWrite(data []byte) (int, error) {
+func (this_ *Sess) TcpWrite(data []byte) (int, error) {
 	return write(this_.tcpConn, data, this_.timeout)
 }
 
-func (this_ *Sess) wsWrite(data []byte) (int, error) {
+func (this_ *Sess) WsWrite(data []byte) (int, error) {
 	err := this_.wsConn.WriteMessage(websocket.BinaryMessage, data)
 	if err != nil {
 		return -1, err

@@ -1,4 +1,4 @@
-package game
+package biz
 
 import "errors"
 

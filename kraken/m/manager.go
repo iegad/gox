@@ -1,8 +1,8 @@
 package m
 
-import "github.com/iegad/gox/frm/game"
+import "github.com/iegad/gox/frm/biz"
 
 var (
-	Players game.PlayerManager
+	Players biz.UserManager
 	Nodes   NodeManager
 )

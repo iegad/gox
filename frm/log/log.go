@@ -111,10 +111,10 @@ func base(lv int, args ...interface{}) {
 	if len(logPath) > 0 {
 		f := getFile(lv, tn)
 		if f != nil {
-			fmt.Fprintf(f, "[%s %s %s:%d]%v\n", lvmap[lv], tn.Format("2006-01-02 15:04:05.000000"), file, line, content)
+			fmt.Fprintf(f, "[%s %s %s:%d] %v\n", lvmap[lv], tn.Format("2006-01-02 15:04:05.000000"), file, line, content)
 			return
 		}
 	}
 
-	fmt.Printf("[%s %s %s:%d]%v\n", lvmap[lv], tn.Format("2006-01-02 15:04:05.000000"), file, line, content)
+	fmt.Printf("[%s %s %s:%d] %v\n", lvmap[lv], tn.Format("2006-01-02 15:04:05.000000"), file, line, content)
 }

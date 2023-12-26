@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	"github.com/iegad/gox/frm/log"
-	"github.com/iegad/gox/frm/node"
 	"github.com/iegad/gox/frm/nw"
+	"github.com/iegad/gox/frm/proxy"
 	"github.com/iegad/gox/kraken/conf"
 	"github.com/iegad/gox/kraken/m"
 	"github.com/iegad/gox/pb"
@@ -21,7 +21,7 @@ func RegistNode(sess *nw.Sess, in *pb.Package) error {
 		log.Fatal("in is nil")
 	}
 
-	nodeCode, err := node.NodeCodeToString(in.NodeCode)
+	nodeCode, err := proxy.NodeUIDToCode(in.NodeUID)
 	if err != nil {
 		return err
 	}
@@ -42,14 +42,14 @@ func RegistNode(sess *nw.Sess, in *pb.Package) error {
 		})
 	}
 
-	if len(req.NodeCode) != 16 {
+	if len(req.NodeUID) != 16 {
 		return registNodeRsp(sess, req, &pb.RegistNodeRsp{
 			Code:  -1,
 			Error: pb.Err_NodeCodeInvalid.Error(),
 		})
 	}
 
-	m.Nodes.AddNode(m.NewNode(req.NodeCode, sess))
+	m.Nodes.AddNode(m.NewNode(req.NodeUID, sess))
 	return registNodeRsp(sess, req, &pb.RegistNodeRsp{Code: 0})
 }
 
@@ -65,12 +65,12 @@ func registNodeRsp(sess *nw.Sess, req *pb.RegistNodeReq, rsp *pb.RegistNodeRsp) 
 	}
 
 	nd.Idempotent++
-	data, err = pb.SerializeNodePackage(req.NodeCode, pb.MID_B_RegistNodeRsp, nd.Idempotent, data)
+	data, err = pb.SerializeNodePackage(req.NodeUID, pb.MID_B_RegistNodeRsp, nd.Idempotent, data)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	_, err = sess.Write(data)
+	_, err = sess.TcpWrite(data)
 	if err != nil {
 		log.Error(err)
 		return err

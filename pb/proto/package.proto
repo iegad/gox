@@ -5,11 +5,11 @@ option go_package = "/pb";
 
 
 message Package {
-    bytes NodeCode   = 1;
-    int32 MessageID  = 2;
-    int32 UserID     = 3;
-    int64 Idempotent = 4;
-    string RealAddr  = 5;
-    bytes Token      = 6;
-    bytes Data       = 7;
+    bytes  NodeUID    = 1; // 消息接收节点
+    int32  MessageID  = 2; // 消息ID
+    int32  UserID     = 3; // Front消息必要字段
+    int64  Idempotent = 4; // 幂等
+    string RealAddr   = 5; // 客户端真实地址, Front请求时由Kraken赋值
+    bytes  Token      = 6; // 会话, Front消息必要字段
+    bytes  Data       = 7; // 消息内容
 }
