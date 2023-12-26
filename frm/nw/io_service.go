@@ -293,9 +293,7 @@ func (this_ *IOService) tcpConnHandle(conn *net.TCPConn, wg *sync.WaitGroup) {
 		rbuf, err = sess.tcpRead()
 		if err != nil {
 			log.Error(err)
-			if netIsClosedErr(err) {
-				break
-			}
+			break
 		}
 
 		err = this_.engine.OnData(sess, rbuf)

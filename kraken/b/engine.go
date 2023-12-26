@@ -6,6 +6,7 @@ import (
 	"github.com/iegad/gox/kraken/b/handlers"
 	"github.com/iegad/gox/kraken/m"
 	"github.com/iegad/gox/pb"
+	"google.golang.org/protobuf/proto"
 )
 
 type engine struct {
@@ -17,7 +18,7 @@ func newEngine() *engine {
 		handlers: make(map[int32]m.Handler),
 	}
 
-	this_.addHandler(pb.MID_UserLoginReq, handlers.RegistNode)
+	this_.addHandler(pb.MID_B_RegistNodeReq, handlers.RegistNode)
 
 	return this_
 }
@@ -36,19 +37,34 @@ func (this_ *engine) Info() *nw.EngineInfo {
 
 func (this_ *engine) OnConnected(sess *nw.Sess) error {
 	m.Nodes.AddSession(sess)
-	log.Info("[%v] 连接成功", sess.RemoteAddr().String())
 	return nil
 }
 
 func (this_ *engine) OnDisconnected(sess *nw.Sess) {
-	m.Nodes.RemoveSession(sess.RemoteAddr().String())
-	log.Info("[%v] 断开连接", sess.RemoteAddr().String())
+	m.Nodes.Remove(sess)
 }
 
 func (this_ *engine) OnData(sess *nw.Sess, data []byte) error {
-	log.Info(string(data))
-	_, err := sess.Write(data)
-	return err
+	pack := &pb.Package{}
+	err := proto.Unmarshal(data, pack)
+	if err != nil {
+		return err
+	}
+
+	if pack.MessageID == 0 {
+		return m.Err_B_MessageIDInvalid
+	}
+
+	if len(pack.NodeCode) != 16 {
+		return m.Err_B_NodeCodeInvalid
+	}
+
+	if handler, ok := this_.handlers[pack.MessageID]; ok {
+		err = handler(sess, pack)
+		return err
+	} else {
+		return m.Err_F_MessageIDInvalid
+	}
 }
 
 func (this_ *engine) OnRun(iosvc *nw.IOService) error {

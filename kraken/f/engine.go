@@ -18,7 +18,7 @@ func newEngine() *engine {
 		handlers: make(map[int32]m.Handler),
 	}
 
-	this_.addHandler(pb.MID_UserLoginReq, handlers.UserLogin)
+	this_.addHandler(pb.MID_F_UserLoginReq, handlers.UserLogin)
 
 	return this_
 }

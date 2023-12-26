@@ -18,6 +18,7 @@ type krakenConfig struct {
 	ManangerHost string              `yaml:"manager_host"`
 	Front        *nw.IOServiceConfig `yaml:"front,omitempty"`
 	Backend      *nw.IOServiceConfig `yaml:"backend,omitempty"`
+	UCode        []byte              `yaml:"-"`
 }
 
 func LoadConfig(filename string) error {

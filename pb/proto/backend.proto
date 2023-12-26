@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package pb;
+option go_package = "/pb";
+
+
+message RegistNodeReq {
+    int32 NodeID   = 1;
+    bytes NodeCode = 2;
+}
+
+message RegistNodeRsp {
+    int32  Code = 1;
+    string Error = 2;
+}
