@@ -115,19 +115,12 @@ func (this_ *Node) registNode(c *nw.Client) error {
 		return err
 	}
 
-	krakenUID, err := uuid.Parse("ae906ff9-552b-4f63-b807-95a1195deddf") // TODO
+	krakenUID, err := uuid.Parse("ae906ff9-552b-4f63-b807-95a1195deddf") // TODO: 从REDIS中获取
 	if err != nil {
 		return err
 	}
 
-	out := &pb.Package{
-		NodeCode:   krakenUID[:],
-		MessageID:  pb.MID_B_RegistNodeReq,
-		Idempotent: this_.Idempotent,
-		Data:       data,
-	}
-
-	data, err = proto.Marshal(out)
+	data, err = pb.SerializeNodePackage(krakenUID[:], pb.MID_B_RegistNodeReq, this_.Idempotent, data)
 	if err != nil {
 		return err
 	}
@@ -142,14 +135,9 @@ func (this_ *Node) registNode(c *nw.Client) error {
 		return err
 	}
 
-	in := &pb.Package{}
-	err = proto.Unmarshal(data, in)
+	in, err := pb.ParseNodePackage(data)
 	if err != nil {
 		return err
-	}
-
-	if len(in.NodeCode) != 16 {
-		return fmt.Errorf("in.NodeCode is invalid")
 	}
 
 	nodeCode, err := NodeCodeToString(in.NodeCode)
@@ -165,8 +153,7 @@ func (this_ *Node) registNode(c *nw.Client) error {
 		return fmt.Errorf("message_id: %v is invalid", in.MessageID)
 	}
 
-	rsp := &pb.RegistNodeRsp{}
-	err = proto.Unmarshal(in.Data, rsp)
+	rsp, err := pb.ParseMessage[pb.RegistNodeRsp](in.Data)
 	if err != nil {
 		return err
 	}

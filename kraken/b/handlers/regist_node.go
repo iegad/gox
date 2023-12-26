@@ -30,8 +30,7 @@ func RegistNode(sess *nw.Sess, in *pb.Package) error {
 		return fmt.Errorf("regist node req must be this engine code")
 	}
 
-	req := &pb.RegistNodeReq{}
-	err = proto.Unmarshal(in.Data, req)
+	req, err := pb.ParseMessage[pb.RegistNodeReq](in.Data)
 	if err != nil {
 		return err
 	}
@@ -55,7 +54,6 @@ func RegistNode(sess *nw.Sess, in *pb.Package) error {
 }
 
 func registNodeRsp(sess *nw.Sess, req *pb.RegistNodeReq, rsp *pb.RegistNodeRsp) error {
-
 	nd, ok := sess.UserData.(*m.Node)
 	if !ok {
 		log.Fatal("sess.user_data is not *m.Node")
@@ -67,14 +65,7 @@ func registNodeRsp(sess *nw.Sess, req *pb.RegistNodeReq, rsp *pb.RegistNodeRsp) 
 	}
 
 	nd.Idempotent++
-	out := &pb.Package{
-		NodeCode:   req.NodeCode,
-		MessageID:  pb.MID_B_RegistNodeRsp,
-		Idempotent: nd.Idempotent,
-		Data:       data,
-	}
-
-	data, err = proto.Marshal(out)
+	data, err = pb.SerializeNodePackage(req.NodeCode, pb.MID_B_RegistNodeRsp, nd.Idempotent, data)
 	if err != nil {
 		log.Fatal(err)
 	}

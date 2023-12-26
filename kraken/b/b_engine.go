@@ -6,7 +6,6 @@ import (
 	"github.com/iegad/gox/kraken/b/handlers"
 	"github.com/iegad/gox/kraken/m"
 	"github.com/iegad/gox/pb"
-	"google.golang.org/protobuf/proto"
 )
 
 type b_engine struct {
@@ -44,26 +43,6 @@ func (this_ *b_engine) OnDisconnected(sess *nw.Sess) {
 	m.Nodes.Remove(sess)
 }
 
-func (this_ *b_engine) OnData(sess *nw.Sess, data []byte) error {
-	pack := &pb.Package{}
-	err := proto.Unmarshal(data, pack)
-	if err != nil {
-		return err
-	}
-
-	err = pb.CheckPackage(pack)
-	if err != nil {
-		return err
-	}
-
-	if handler, ok := this_.handlers[pack.MessageID]; ok {
-		err = handler(sess, pack)
-		return err
-	} else {
-		return m.Err_F_MessageIDInvalid
-	}
-}
-
 func (this_ *b_engine) OnRun(iosvc *nw.IOService) error {
 	tcpAddr := iosvc.TcpAddr()
 	if tcpAddr != nil {
@@ -80,4 +59,18 @@ func (this_ *b_engine) OnStopped(iosvc *nw.IOService) {
 	}
 
 	m.Nodes.Clear()
+}
+
+func (this_ *b_engine) OnData(sess *nw.Sess, data []byte) error {
+	pack, err := pb.ParseNodePackage(data)
+	if err != nil {
+		return err
+	}
+
+	if handler, ok := this_.handlers[pack.MessageID]; ok {
+		err = handler(sess, pack)
+		return err
+	} else {
+		return m.Err_F_MessageIDInvalid
+	}
 }
