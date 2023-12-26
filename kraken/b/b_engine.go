@@ -9,12 +9,12 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-type engine struct {
+type b_engine struct {
 	handlers map[int32]m.Handler
 }
 
-func newEngine() *engine {
-	this_ := &engine{
+func newEngine() *b_engine {
+	this_ := &b_engine{
 		handlers: make(map[int32]m.Handler),
 	}
 
@@ -23,7 +23,7 @@ func newEngine() *engine {
 	return this_
 }
 
-func (this_ *engine) addHandler(mid int32, h m.Handler) {
+func (this_ *b_engine) addHandler(mid int32, h m.Handler) {
 	if _, ok := this_.handlers[mid]; ok {
 		log.Fatal("%v has already exists", mid)
 	}
@@ -31,32 +31,29 @@ func (this_ *engine) addHandler(mid int32, h m.Handler) {
 	this_.handlers[mid] = h
 }
 
-func (this_ *engine) Info() *nw.EngineInfo {
+func (this_ *b_engine) Info() *nw.EngineInfo {
 	return &nw.EngineInfo{Name: "Kraken.Backend"}
 }
 
-func (this_ *engine) OnConnected(sess *nw.Sess) error {
-	m.Nodes.AddSession(sess)
+func (this_ *b_engine) OnConnected(sess *nw.Sess) error {
+	m.Nodes.Add(sess)
 	return nil
 }
 
-func (this_ *engine) OnDisconnected(sess *nw.Sess) {
+func (this_ *b_engine) OnDisconnected(sess *nw.Sess) {
 	m.Nodes.Remove(sess)
 }
 
-func (this_ *engine) OnData(sess *nw.Sess, data []byte) error {
+func (this_ *b_engine) OnData(sess *nw.Sess, data []byte) error {
 	pack := &pb.Package{}
 	err := proto.Unmarshal(data, pack)
 	if err != nil {
 		return err
 	}
 
-	if pack.MessageID == 0 {
-		return m.Err_B_MessageIDInvalid
-	}
-
-	if len(pack.NodeCode) != 16 {
-		return m.Err_B_NodeCodeInvalid
+	err = pb.CheckPackage(pack)
+	if err != nil {
+		return err
 	}
 
 	if handler, ok := this_.handlers[pack.MessageID]; ok {
@@ -67,7 +64,7 @@ func (this_ *engine) OnData(sess *nw.Sess, data []byte) error {
 	}
 }
 
-func (this_ *engine) OnRun(iosvc *nw.IOService) error {
+func (this_ *b_engine) OnRun(iosvc *nw.IOService) error {
 	tcpAddr := iosvc.TcpAddr()
 	if tcpAddr != nil {
 		log.Info("Backend Service TCP[%v] 服务开启 ...", tcpAddr.String())
@@ -76,7 +73,7 @@ func (this_ *engine) OnRun(iosvc *nw.IOService) error {
 	return nil
 }
 
-func (this_ *engine) OnStopped(iosvc *nw.IOService) {
+func (this_ *b_engine) OnStopped(iosvc *nw.IOService) {
 	tcpAddr := iosvc.TcpAddr()
 	if tcpAddr != nil {
 		log.Info("Backend Service TCP[%v] 服务关闭", tcpAddr.String())

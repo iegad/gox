@@ -8,9 +8,7 @@ import (
 
 func main() {
 	uid := uuid.New()
-	nodeCode := uid[:]
-	log.Info(len(nodeCode))
-	nd := node.NewNode(1, nodeCode)
+	nd := node.NewNode(1, uid[:])
 	err := nd.AddProxy("127.0.0.1:6688")
 	if err != nil {
 		log.Fatal(err)

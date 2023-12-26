@@ -9,12 +9,12 @@ import (
 	"google.golang.org/protobuf/proto"
 )
 
-type engine struct {
+type f_engine struct {
 	handlers map[int32]m.Handler
 }
 
-func newEngine() *engine {
-	this_ := &engine{
+func newEngine() *f_engine {
+	this_ := &f_engine{
 		handlers: make(map[int32]m.Handler),
 	}
 
@@ -23,7 +23,7 @@ func newEngine() *engine {
 	return this_
 }
 
-func (this_ *engine) addHandler(mid int32, h m.Handler) {
+func (this_ *f_engine) addHandler(mid int32, h m.Handler) {
 	if _, ok := this_.handlers[mid]; ok {
 		log.Fatal("%v has already exists", mid)
 	}
@@ -31,22 +31,22 @@ func (this_ *engine) addHandler(mid int32, h m.Handler) {
 	this_.handlers[mid] = h
 }
 
-func (this_ *engine) Info() *nw.EngineInfo {
+func (this_ *f_engine) Info() *nw.EngineInfo {
 	return &nw.EngineInfo{Name: "Kraken.Front Service"}
 }
 
-func (this_ *engine) OnConnected(sess *nw.Sess) error {
+func (this_ *f_engine) OnConnected(sess *nw.Sess) error {
 	m.Players.AddSession(sess)
 	log.Info("%v[%v] 连接成功", sess.Protocol(), sess.RemoteAddr().String())
 	return nil
 }
 
-func (this_ *engine) OnDisconnected(sess *nw.Sess) {
+func (this_ *f_engine) OnDisconnected(sess *nw.Sess) {
 	m.Players.RemoveSession(sess.RemoteAddr().String())
 	log.Info("%v[%v] 连接断开", sess.Protocol(), sess.RemoteAddr().String())
 }
 
-func (this_ *engine) OnData(sess *nw.Sess, data []byte) error {
+func (this_ *f_engine) OnData(sess *nw.Sess, data []byte) error {
 	pack := &pb.Package{}
 	err := proto.Unmarshal(data, pack)
 	if err != nil {
@@ -69,7 +69,7 @@ func (this_ *engine) OnData(sess *nw.Sess, data []byte) error {
 	return nil
 }
 
-func (this_ *engine) OnRun(iosvc *nw.IOService) error {
+func (this_ *f_engine) OnRun(iosvc *nw.IOService) error {
 	tcpAddr := iosvc.TcpAddr()
 	if tcpAddr != nil {
 		log.Info("Front Service TCP[%v] 服务开启 ...", tcpAddr.String())
@@ -83,7 +83,7 @@ func (this_ *engine) OnRun(iosvc *nw.IOService) error {
 	return nil
 }
 
-func (this_ *engine) OnStopped(iosvc *nw.IOService) {
+func (this_ *f_engine) OnStopped(iosvc *nw.IOService) {
 	tcpAddr := iosvc.TcpAddr()
 	if tcpAddr != nil {
 		log.Info("Front Service TCP[%v] 服务关闭", tcpAddr.String())

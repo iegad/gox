@@ -36,12 +36,17 @@ type NodeManager struct {
 	nodeMap sync.Map
 }
 
-func (this_ *NodeManager) AddSession(sess *nw.Sess) {
-	if sess == nil || sess.UserData != nil {
+func (this_ *NodeManager) Add(sess *nw.Sess) {
+	if sess == nil {
 		log.Fatal("sess is invalid")
 	}
 
-	this_.nodeMap.Store(sess.RemoteAddr().String(), sess)
+	if node, ok := sess.UserData.(*Node); ok {
+		this_.nodeMap.Delete(sess.RemoteAddr().String())
+		this_.nodeMap.Store(node.NodeCode, node)
+	} else {
+		this_.nodeMap.Store(sess.RemoteAddr().String(), sess)
+	}
 }
 
 func (this_ *NodeManager) AddNode(nd *Node) {

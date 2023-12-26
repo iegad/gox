@@ -46,7 +46,7 @@ func RegistNode(sess *nw.Sess, in *pb.Package) error {
 	if len(req.NodeCode) != 16 {
 		return registNodeRsp(sess, req, &pb.RegistNodeRsp{
 			Code:  -1,
-			Error: m.Err_B_NodeCodeInvalid.Error(),
+			Error: pb.Err_NodeCodeInvalid.Error(),
 		})
 	}
 
