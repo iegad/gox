@@ -13,6 +13,7 @@ import (
 var Instance *krakenConfig
 
 type krakenConfig struct {
+	ChannelID    int32               `yaml:"channel_id"`
 	NodeCode     string              `yaml:"node_code"`
 	ManangerHost string              `yaml:"manager_host"`
 	Front        *nw.IOServiceConfig `yaml:"front,omitempty"`
@@ -60,6 +61,10 @@ func LoadConfig(filename string) {
 	err = yaml.Unmarshal(rbuf, tmp)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if tmp.ChannelID <= 0 {
+		log.Fatal("config: channel_id is invalid")
 	}
 
 	if tmp.Front == nil {

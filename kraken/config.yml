@@ -1,3 +1,4 @@
+channel_id: 1
 node_code: ae906ff9-552b-4f63-b807-95a1195deddf
 manager_host: ":9090"
 front:
@@ -8,6 +9,6 @@ front:
 backend:
     tcp_endpoint: ":6688"
 redis:
-    addr: "192.168.0.103:6379"
+    addr: "192.168.0.104:6379"
     username: ""
     password: ""

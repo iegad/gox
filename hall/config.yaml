@@ -1,5 +1,6 @@
+channel_id: 1
 node_code: 7c1b06c5-ef75-4e7f-ac44-e9efe6e5faea
 redis:
-    addr: 192.168.0.103:6379
+    addr: 192.168.0.104:6379
     username: ""
     password: ""

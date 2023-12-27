@@ -3,45 +3,54 @@ package biz
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"time"
 
 	"github.com/go-redis/redis/v8"
 	"github.com/iegad/gox/frm/log"
+	"github.com/iegad/gox/frm/utils"
 )
 
-type Kraken struct {
+func GetProxyInfoKey(nodeCode string) string {
+	return fmt.Sprintf("PROXY_%v", nodeCode)
+}
+
+type ProxyInfo struct {
+	ChannelID    int32  `json:"channel_id"`
 	NodeCode     string `json:"node_code"`
 	FrontTcpHost string `json:"front_tcp_host"`
 	FrontWsHost  string `json:"front_ws_host"`
 	BackendHost  string `json:"backend_host"`
 }
 
-func GetKrakenFromRedis(r *redis.Client) ([]*Kraken, error) {
+func GetProxyInfoFromRedis(r *redis.Client) ([]*ProxyInfo, error) {
 	if r == nil {
 		log.Fatal("r is nil")
 	}
 
 	ctx, cancel := context.WithTimeout(context.TODO(), time.Second*15)
-	arr, err := r.Keys(ctx, "KRAKEN_*").Result()
+	defer cancel()
+
+	arr, err := r.Keys(ctx, "PROXY_*").Result()
 	if err != nil {
 		return nil, err
 	}
 
-	result := []*Kraken{}
+	result := []*ProxyInfo{}
 	for _, key := range arr {
 		jstr, err := r.Get(ctx, key).Result()
 		if err != nil {
 			return nil, err
 		}
 
-		item := &Kraken{}
-		err = json.Unmarshal([]byte(jstr), item)
+		item := &ProxyInfo{}
+		err = json.Unmarshal(utils.Str2Bytes(jstr), item)
 		if err != nil {
 			return nil, err
 		}
 
 		result = append(result, item)
 	}
-	cancel()
+
 	return result, nil
 }

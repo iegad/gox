@@ -12,9 +12,10 @@ import (
 var Instance *config
 
 type config struct {
-	NodeCode string          `yaml:"node_code"`
-	Redis    *db.RedisConfig `yaml:"redis"`
-	NodeUID  []byte
+	ChannelID int32           `yaml:"channel_id"`
+	NodeCode  string          `yaml:"node_code"`
+	Redis     *db.RedisConfig `yaml:"redis"`
+	NodeUID   []byte
 }
 
 func Init(filename string) {
@@ -45,6 +46,10 @@ func Init(filename string) {
 	err = yaml.Unmarshal(data, tmp)
 	if err != nil {
 		log.Fatal(err)
+	}
+
+	if tmp.ChannelID <= 0 {
+		log.Fatal("config: channel_id is invalid")
 	}
 
 	if len(tmp.NodeCode) != 36 {

@@ -5,7 +5,7 @@ import (
 
 	"github.com/iegad/gox/frm/log"
 	"github.com/iegad/gox/frm/nw"
-	"github.com/iegad/gox/frm/proxy"
+	"github.com/iegad/gox/frm/svc"
 	"github.com/iegad/gox/kraken/conf"
 	"github.com/iegad/gox/kraken/m"
 	"github.com/iegad/gox/pb"
@@ -21,7 +21,7 @@ func RegistNode(sess *nw.Sess, in *pb.Package) error {
 		log.Fatal("in is nil")
 	}
 
-	nodeCode, err := proxy.NodeUIDToCode(in.NodeUID)
+	nodeCode, err := svc.NodeUIDToCode(in.NodeUID)
 	if err != nil {
 		return err
 	}
