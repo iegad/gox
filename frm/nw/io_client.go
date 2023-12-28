@@ -1,6 +1,7 @@
 package nw
 
 import (
+	"bufio"
 	"encoding/binary"
 	"net"
 	"time"
@@ -11,8 +12,8 @@ import (
 type Client struct {
 	tcpConn  *net.TCPConn
 	timeout  time.Duration
-	nHead    uint32
-	rbuf     []byte
+	header   uint32
+	reader   *bufio.Reader
 	UserData interface{}
 }
 
@@ -44,8 +45,7 @@ func NewTcpClient(lep, rep string, timeout time.Duration) (*Client, error) {
 	return &Client{
 		tcpConn: conn,
 		timeout: timeout,
-		nHead:   0,
-		rbuf:    []byte{},
+		reader:  bufio.NewReader(conn),
 	}, nil
 }
 
@@ -66,45 +66,39 @@ func (this_ *Client) TcpRead() ([]byte, error) {
 		log.Fatal("Client.tcpConn is nil")
 	}
 
-	var (
-		rbuf  = make([]byte, DEFAULT_RBUF_SIZE)
-		nHead = uint32(0)
-	)
-
-	for {
-		buflen := len(this_.rbuf)
-		nHead = this_.nHead
-		if (nHead == 0 && buflen < UINT32_SIZE) || (nHead > 0 && buflen < int(nHead)) {
-			if this_.timeout > 0 {
-				err := this_.tcpConn.SetReadDeadline(time.Now().Add(this_.timeout))
-				if err != nil {
-					return nil, err
-				}
-			}
-
-			n, err := this_.tcpConn.Read(rbuf)
-			if err != nil {
-				return nil, err
-			}
-
-			this_.rbuf = append(this_.rbuf, rbuf[:n]...)
-		}
-
-		if nHead == 0 && len(this_.rbuf) >= UINT32_SIZE {
-			nHead = binary.BigEndian.Uint32(this_.rbuf[:UINT32_SIZE]) ^ _HeaderKey
-			if nHead > MAX_BUF_SIZE || nHead == 0 {
-				return nil, ErrInvalidBufSize
-			}
-
-			this_.rbuf = this_.rbuf[UINT32_SIZE:]
-			this_.nHead = nHead
-		}
-
-		if nHead > 0 && len(this_.rbuf) >= int(nHead) {
-			ret := this_.rbuf[:nHead]
-			this_.rbuf = this_.rbuf[nHead:]
-			this_.nHead = 0
-			return ret, nil
+	if this_.timeout > 0 {
+		err := this_.tcpConn.SetReadDeadline(time.Now().Add(this_.timeout))
+		if err != nil {
+			return nil, err
 		}
 	}
+
+	header := this_.header
+	if header == 0 {
+		peek, err := this_.reader.Peek(UINT32_SIZE)
+		if err != nil {
+			return nil, err
+		}
+
+		header = binary.BigEndian.Uint32(peek) ^ __HEADER_KEY_
+		if header == 0 || header > MAX_BUF_SIZE {
+			return nil, ErrInvalidBufSize
+		}
+
+		this_.header = header
+	}
+
+	buflen := header + uint32(UINT32_SIZE)
+	if this_.reader.Buffered() < int(buflen) {
+		return nil, nil
+	}
+
+	rbuf := make([]byte, buflen)
+	_, err := this_.reader.Read(rbuf)
+	if err != nil {
+		return nil, err
+	}
+
+	this_.header = 0
+	return rbuf[UINT32_SIZE:], nil
 }

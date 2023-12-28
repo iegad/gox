@@ -1,7 +1,6 @@
 package nw
 
 import (
-	"encoding/binary"
 	"net"
 	"time"
 
@@ -84,54 +83,6 @@ func (this_ *Sess) LocalAddr() net.Addr {
 	}
 
 	return this_.wsConn.LocalAddr()
-}
-
-func (this_ *Sess) tcpRead() ([]byte, error) {
-	if this_.tcpConn == nil {
-		log.Fatal("Sess.tcpConn is nil")
-	}
-
-	var (
-		rbuf  = make([]byte, DEFAULT_RBUF_SIZE)
-		nHead = uint32(0)
-	)
-
-	for {
-		buflen := len(this_.rbuf)
-		nHead = this_.nHead
-		if (nHead == 0 && buflen < UINT32_SIZE) || (nHead > 0 && buflen < int(nHead)) {
-			if this_.timeout > 0 {
-				err := this_.tcpConn.SetReadDeadline(time.Now().Add(this_.timeout))
-				if err != nil {
-					return nil, err
-				}
-			}
-
-			n, err := this_.tcpConn.Read(rbuf)
-			if err != nil {
-				return nil, err
-			}
-
-			this_.rbuf = append(this_.rbuf, rbuf[:n]...)
-		}
-
-		if nHead == 0 && len(this_.rbuf) >= UINT32_SIZE {
-			nHead = binary.BigEndian.Uint32(this_.rbuf[:UINT32_SIZE]) ^ _HeaderKey
-			if nHead > MAX_BUF_SIZE || nHead == 0 {
-				return nil, ErrInvalidBufSize
-			}
-
-			this_.rbuf = this_.rbuf[UINT32_SIZE:]
-			this_.nHead = nHead
-		}
-
-		if nHead > 0 && len(this_.rbuf) >= int(nHead) {
-			ret := this_.rbuf[:nHead]
-			this_.rbuf = this_.rbuf[nHead:]
-			this_.nHead = 0
-			return ret, nil
-		}
-	}
 }
 
 func (this_ *Sess) TcpWrite(data []byte) (int, error) {

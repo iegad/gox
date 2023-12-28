@@ -1,6 +1,8 @@
 package nw
 
 import (
+	"bufio"
+	"encoding/binary"
 	"encoding/json"
 	"net"
 	"net/http"
@@ -48,10 +50,10 @@ func (this_ *IOServiceInfo) String() string {
 
 // IO服务配置
 type IOServiceConfig struct {
-	TcpEndpoint *string `yaml:"tcp_endpoint,omitempty"`
-	WsEndpoint  *string `yaml:"ws_endpoint,omitempty"`
-	MaxConn     int32   `yaml:"max_conn,omitempty"`
-	Timeout     int32   `yaml:"timeout(s),omitempty"`
+	TcpEndpoint string `yaml:"tcp_endpoint"`
+	WsEndpoint  string `yaml:"ws_endpoint"`
+	MaxConn     int32  `yaml:"max_conn"`
+	Timeout     int32  `yaml:"timeout(s)"`
 }
 
 // IO服务
@@ -74,7 +76,7 @@ func NewIOService(cfg *IOServiceConfig, engine IEngine) (*IOService, error) {
 		return nil, ErrConfigIsNil
 	}
 
-	if cfg.TcpEndpoint == nil && cfg.WsEndpoint == nil {
+	if len(cfg.TcpEndpoint) == 0 && len(cfg.WsEndpoint) == 0 {
 		return nil, ErrNoPoints
 	}
 
@@ -84,15 +86,15 @@ func NewIOService(cfg *IOServiceConfig, engine IEngine) (*IOService, error) {
 		err     error
 	)
 
-	if cfg.TcpEndpoint != nil {
-		tcpAddr, err = net.ResolveTCPAddr("tcp", *cfg.TcpEndpoint)
+	if len(cfg.TcpEndpoint) > 0 {
+		tcpAddr, err = net.ResolveTCPAddr("tcp", cfg.TcpEndpoint)
 		if err != nil {
 			return nil, ErrTcpEPIsInvalid
 		}
 	}
 
-	if cfg.WsEndpoint != nil {
-		wsAddr, err = net.ResolveTCPAddr("tcp", *cfg.WsEndpoint)
+	if len(cfg.WsEndpoint) > 0 {
+		wsAddr, err = net.ResolveTCPAddr("tcp", cfg.WsEndpoint)
 		if err != nil {
 			return nil, ErrWsEPIsInvalid
 		}
@@ -194,8 +196,13 @@ func (this_ *IOService) Shutdown() {
 	this_.wg.Wait()
 }
 
-func (this_ *IOService) Wait() {
+func (this_ *IOService) RunLoop() error {
+	err := this_.Run()
+	if err != nil {
+		return err
+	}
 	this_.wg.Wait()
+	return nil
 }
 
 func (this_ *IOService) Run() (err error) {
@@ -265,7 +272,6 @@ func (this_ *IOService) tcpConnHandle(conn *net.TCPConn, wg *sync.WaitGroup) {
 	var (
 		err  error
 		sess = NewTcpSession(conn, this_.timeout)
-		rbuf = []byte{}
 	)
 
 	defer func() {
@@ -281,6 +287,9 @@ func (this_ *IOService) tcpConnHandle(conn *net.TCPConn, wg *sync.WaitGroup) {
 		return
 	}
 
+	reader := bufio.NewReader(conn)
+	header := uint32(0)
+
 	for {
 		if this_.timeout > 0 {
 			err = conn.SetReadDeadline(time.Now().Add(this_.timeout))
@@ -290,13 +299,37 @@ func (this_ *IOService) tcpConnHandle(conn *net.TCPConn, wg *sync.WaitGroup) {
 			}
 		}
 
-		rbuf, err = sess.tcpRead()
+		peek, err := reader.Peek(UINT32_SIZE)
 		if err != nil {
 			log.Error(err)
 			break
 		}
 
-		err = this_.engine.OnData(sess, rbuf)
+		header = binary.BigEndian.Uint32(peek)
+		if err != nil {
+			log.Error(err)
+			break
+		}
+
+		header ^= __HEADER_KEY_
+		if header == 0 || header > MAX_BUF_SIZE {
+			log.Error(ErrInvalidBufSize)
+			break
+		}
+
+		buflen := header + 4
+		if reader.Buffered() < int(buflen) {
+			continue
+		}
+
+		rbuf := make([]byte, buflen)
+		_, err = reader.Read(rbuf)
+		if err != nil {
+			log.Error(err)
+			continue
+		}
+
+		err = this_.engine.OnData(sess, rbuf[UINT32_SIZE:])
 		if err != nil {
 			log.Error(err)
 			break
