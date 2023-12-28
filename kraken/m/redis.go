@@ -37,9 +37,9 @@ func RunKeepAlived() {
 	value, _ := json.Marshal(&biz.ProxyInfo{
 		ChannelID:    conf.Instance.ChannelID,
 		NodeCode:     conf.Instance.NodeCode,
-		FrontTcpHost: *conf.Instance.Front.TcpEndpoint,
-		FrontWsHost:  *conf.Instance.Front.WsEndpoint,
-		BackendHost:  *conf.Instance.Backend.TcpEndpoint,
+		FrontTcpHost: conf.Instance.Front.TcpEndpoint,
+		FrontWsHost:  conf.Instance.Front.WsEndpoint,
+		BackendHost:  conf.Instance.Backend.TcpEndpoint,
 	})
 	jstr := utils.Bytes2Str(value)
 

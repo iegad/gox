@@ -10,7 +10,7 @@ import (
 type nodeManager struct {
 	proxyMap map[int32]*biz.ProxyInfo
 	hallMap  map[int32]*biz.HallInfo
-	mtx      sync.Mutex
+	mtx      sync.RWMutex
 }
 
 var NodeManager *nodeManager = &nodeManager{}
@@ -37,4 +37,26 @@ func (this_ *nodeManager) SetNodes(proxyList []*biz.ProxyInfo, hallList []*biz.H
 	this_.proxyMap = proxyMap
 	this_.hallMap = hallMap
 	this_.mtx.Unlock()
+}
+
+func (this_ *nodeManager) GetHall(channelID int32) *biz.HallInfo {
+	this_.mtx.RLock()
+	defer this_.mtx.RUnlock()
+
+	if v, ok := this_.hallMap[channelID]; ok {
+		return v
+	}
+
+	return nil
+}
+
+func (this_ *nodeManager) GetProxy(channelID int32) *biz.ProxyInfo {
+	this_.mtx.RLock()
+	defer this_.mtx.RUnlock()
+
+	if v, ok := this_.proxyMap[channelID]; ok {
+		return v
+	}
+
+	return nil
 }

@@ -11,6 +11,7 @@ import (
 type config struct {
 	Host  string          `yaml:"host"`
 	Redis *db.RedisConfig `yaml:"redis"`
+	Mysql *db.MysqlConfig `yaml:"mysql"`
 }
 
 var Instance *config
@@ -22,6 +23,7 @@ func Init(fname string) {
 			data, _ = yaml.Marshal(&config{
 				Host:  ":8888",
 				Redis: &db.RedisConfig{},
+				Mysql: &db.MysqlConfig{},
 			})
 
 			err = os.WriteFile(fname, data, 0755)

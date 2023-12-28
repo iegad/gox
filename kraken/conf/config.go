@@ -26,14 +26,8 @@ func LoadConfig(filename string) {
 	rbuf, err := os.ReadFile(filename)
 	if err != nil {
 		if os.IsNotExist(err) {
-			emptyStr := ""
 
-			svcConfig := &nw.IOServiceConfig{
-				TcpEndpoint: &emptyStr,
-				WsEndpoint:  &emptyStr,
-				MaxConn:     -1,
-				Timeout:     -1,
-			}
+			svcConfig := &nw.IOServiceConfig{}
 
 			wbuf, err := yaml.Marshal(&krakenConfig{
 				NodeCode:     uuid.NewString(),
@@ -75,7 +69,7 @@ func LoadConfig(filename string) {
 		log.Fatal("config: front's max_conn is invalid")
 	}
 
-	if tmp.Front.TcpEndpoint == nil && tmp.Front.WsEndpoint == nil {
+	if len(tmp.Front.TcpEndpoint) == 0 && len(tmp.Front.WsEndpoint) == 0 {
 		log.Fatal("config: front's tcp and ws endpoint is invalid")
 	}
 
@@ -87,7 +81,7 @@ func LoadConfig(filename string) {
 		log.Fatal("config: backend is invalid")
 	}
 
-	if tmp.Backend.TcpEndpoint == nil {
+	if len(tmp.Backend.TcpEndpoint) == 0 {
 		log.Fatal("config: backend's tcp endpoint is invalid")
 	}
 

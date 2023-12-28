@@ -3,3 +3,8 @@ redis:
     addr: "192.168.0.104:6379"
     username: ""
     password: ""
+mysql:
+    addr: "127.0.0.1:3306"
+    username: "root"
+    password: "1111"
+    db: "DB_CENTER"

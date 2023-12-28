@@ -2,12 +2,17 @@ package biz
 
 import (
 	"encoding/binary"
+	"fmt"
 	"log"
 	"math/rand"
 	"sync"
 
 	"github.com/iegad/gox/frm/nw"
 )
+
+func GetUserSessionKey(userID int64) string {
+	return fmt.Sprintf("USER_SESS_%v", userID)
+}
 
 type user struct {
 	UserID int64
