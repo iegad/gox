@@ -15,11 +15,12 @@ func (this_ *EchoEngine) Info() *nw.EngineInfo {
 }
 
 func (this_ *EchoEngine) OnConnected(sess *nw.Sess) error {
+	log.Info("%v has connected", sess.RemoteAddr().String())
 	return nil
 }
 
 func (this_ *EchoEngine) OnDisconnected(sess *nw.Sess) {
-
+	log.Info("%v has disconnected", sess.RemoteAddr().String())
 }
 
 func (this_ *EchoEngine) OnData(sess *nw.Sess, data []byte) error {
@@ -39,6 +40,7 @@ func (this_ *EchoEngine) OnStopped(iosvc *nw.IOService) {
 func main() {
 	ios, err := nw.NewIOService(&nw.IOServiceConfig{
 		TcpEndpoint: ":8080",
+		Timeout:     10,
 	}, &EchoEngine{})
 	if err != nil {
 		log.Fatal(err)
