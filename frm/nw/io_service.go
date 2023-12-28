@@ -288,7 +288,8 @@ func (this_ *IOService) tcpConnHandle(conn *net.TCPConn, wg *sync.WaitGroup) {
 	}
 
 	reader := bufio.NewReader(conn)
-	header := uint32(0)
+	header := 0
+	rbuf := make([]byte, MAX_BUF_SIZE+UINT32_SIZE)
 
 	for {
 		if this_.timeout > 0 {
@@ -299,41 +300,42 @@ func (this_ *IOService) tcpConnHandle(conn *net.TCPConn, wg *sync.WaitGroup) {
 			}
 		}
 
-		peek, err := reader.Peek(UINT32_SIZE)
-		if err != nil {
-			log.Error(err)
-			break
+		if header == 0 {
+			peek, err := reader.Peek(UINT32_SIZE)
+			if err != nil {
+				log.Error(err)
+				break
+			}
+
+			header = int(binary.BigEndian.Uint32(peek) ^ __HEADER_KEY_)
+			if err != nil {
+				log.Error(err)
+				break
+			}
+
+			if header == 0 || header > MAX_BUF_SIZE {
+				log.Error(ErrInvalidBufSize)
+				break
+			}
 		}
 
-		header = binary.BigEndian.Uint32(peek)
-		if err != nil {
-			log.Error(err)
-			break
-		}
-
-		header ^= __HEADER_KEY_
-		if header == 0 || header > MAX_BUF_SIZE {
-			log.Error(ErrInvalidBufSize)
-			break
-		}
-
-		buflen := header + 4
+		buflen := header + UINT32_SIZE
 		if reader.Buffered() < int(buflen) {
 			continue
 		}
 
-		rbuf := make([]byte, buflen)
-		_, err = reader.Read(rbuf)
-		if err != nil {
-			log.Error(err)
-			continue
-		}
-
-		err = this_.engine.OnData(sess, rbuf[UINT32_SIZE:])
+		_, err = reader.Read(rbuf[:buflen])
 		if err != nil {
 			log.Error(err)
 			break
 		}
+
+		err = this_.engine.OnData(sess, rbuf[UINT32_SIZE:buflen])
+		if err != nil {
+			log.Error(err)
+			break
+		}
+		header = 0
 	}
 }
 
