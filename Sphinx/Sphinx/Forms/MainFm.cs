@@ -24,5 +24,12 @@ namespace Sphinx
             KrakenFm.Instance.WindowState = FormWindowState.Maximized;
             KrakenFm.Instance.Show();
         }
+
+        private void miCerberusCGI_Click(object sender, EventArgs e)
+        {
+            CerberusFm.Instance.MdiParent = this;
+            CerberusFm.Instance.WindowState = FormWindowState.Maximized;
+            CerberusFm.Instance.Show();
+        }
     }
 }

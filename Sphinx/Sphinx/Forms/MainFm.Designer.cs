@@ -31,6 +31,8 @@
             this.topMenu = new System.Windows.Forms.MenuStrip();
             this.Kraken = new System.Windows.Forms.ToolStripMenuItem();
             this.miKrakenCGI = new System.Windows.Forms.ToolStripMenuItem();
+            this.Cerberus = new System.Windows.Forms.ToolStripMenuItem();
+            this.miCerberusCGI = new System.Windows.Forms.ToolStripMenuItem();
             this.topMenu.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -39,7 +41,8 @@
             this.topMenu.GripMargin = new System.Windows.Forms.Padding(2, 2, 0, 2);
             this.topMenu.ImageScalingSize = new System.Drawing.Size(24, 24);
             this.topMenu.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.Kraken});
+            this.Kraken,
+            this.Cerberus});
             this.topMenu.Location = new System.Drawing.Point(0, 0);
             this.topMenu.Name = "topMenu";
             this.topMenu.Size = new System.Drawing.Size(1901, 32);
@@ -51,15 +54,30 @@
             this.Kraken.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
             this.miKrakenCGI});
             this.Kraken.Name = "Kraken";
-            this.Kraken.Size = new System.Drawing.Size(62, 28);
-            this.Kraken.Text = "网关";
+            this.Kraken.Size = new System.Drawing.Size(84, 28);
+            this.Kraken.Text = "kraken";
             // 
             // miKrakenCGI
             // 
             this.miKrakenCGI.Name = "miKrakenCGI";
             this.miKrakenCGI.Size = new System.Drawing.Size(270, 34);
-            this.miKrakenCGI.Text = "网关CGI测试";
+            this.miKrakenCGI.Text = "kraken CGI test";
             this.miKrakenCGI.Click += new System.EventHandler(this.miKrakenCGI_Click);
+            // 
+            // Cerberus
+            // 
+            this.Cerberus.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.miCerberusCGI});
+            this.Cerberus.Name = "Cerberus";
+            this.Cerberus.Size = new System.Drawing.Size(100, 28);
+            this.Cerberus.Text = "cerberus";
+            // 
+            // miCerberusCGI
+            // 
+            this.miCerberusCGI.Name = "miCerberusCGI";
+            this.miCerberusCGI.Size = new System.Drawing.Size(270, 34);
+            this.miCerberusCGI.Text = "cerberus CGI test";
+            this.miCerberusCGI.Click += new System.EventHandler(this.miCerberusCGI_Click);
             // 
             // MainFm
             // 
@@ -83,6 +101,8 @@
         private System.Windows.Forms.MenuStrip topMenu;
         private System.Windows.Forms.ToolStripMenuItem Kraken;
         private System.Windows.Forms.ToolStripMenuItem miKrakenCGI;
+        private System.Windows.Forms.ToolStripMenuItem Cerberus;
+        private System.Windows.Forms.ToolStripMenuItem miCerberusCGI;
     }
 }
 

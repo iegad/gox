@@ -49,6 +49,12 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Forms\CerberusFm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="Forms\CerberusFm.Designer.cs">
+      <DependentUpon>CerberusFm.cs</DependentUpon>
+    </Compile>
     <Compile Include="Forms\KrakenFm.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -64,6 +70,9 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Utils.cs" />
+    <EmbeddedResource Include="Forms\CerberusFm.resx">
+      <DependentUpon>CerberusFm.cs</DependentUpon>
+    </EmbeddedResource>
     <EmbeddedResource Include="Forms\KrakenFm.resx">
       <DependentUpon>KrakenFm.cs</DependentUpon>
     </EmbeddedResource>
